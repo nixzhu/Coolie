@@ -340,7 +340,7 @@ public class Coolie: NSObject {
         func scanString() -> Token? {
 
             let symbolSet = NSMutableCharacterSet.alphanumericCharacterSet()
-            symbolSet.addCharactersInString("_:/\\.@#$%&!?")
+            symbolSet.addCharactersInString(" \n_:/\\.@#$%&!?")
 
             var string: NSString?
 

@@ -6,8 +6,8 @@
     "is_dog_lover": true,
     "is_cat_lover": false,
     "skills": [
-      "iOS",
-      "Linux"
+      "Swift on iOS",
+      "C on Linux"
     ]
   },
   "projects": [
