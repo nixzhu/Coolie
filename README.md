@@ -20,8 +20,8 @@ Swift 2.1
     "is_dog_lover": true,
     "is_cat_lover": false,
     "skills": [
-      "iOS",
-      "Linux"
+      "Swift on iOS",
+      "C on Linux"
     ]
   },
   "projects": [
@@ -94,5 +94,5 @@ NIX [@nixzhu](https://twitter.com/nixzhu)
 
 ## License
 
-Coolie is available under the [MIT License][mitLink] license. See the LICENSE file for more info.
+Coolie is available under the [MIT License][mitLink]. See the LICENSE file for more info.
 [mitLink]:http://opensource.org/licenses/MIT
