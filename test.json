@@ -1,0 +1,23 @@
+{
+  "name": "NIX",
+  "detail": {
+    "age": 18,
+    "gender": null,
+    "is_dog_lover": true,
+    "is_cat_lover": false,
+    "skills": [
+      "iOS",
+      "Linux"
+    ]
+  },
+  "projects": [
+    {
+      "name": "Navi",
+      "url": "https://github.com/nixzhu/Navi"
+    },
+    {
+      "name": "Coolie",
+      "url": "https://github.com/nixzhu/Coolie"
+    }
+  ]
+}
