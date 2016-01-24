@@ -22,7 +22,8 @@ Swift 2.1
     "skills": [
       "Swift on iOS",
       "C on Linux"
-    ]
+    ],
+    "introduction": "爱你所爱，恨你所恨。"
   },
   "projects": [
     {
@@ -51,16 +52,18 @@ struct User {
 	struct Detail {
 		let age: Int
 		let gender: UnknownType?
+		let introduction: String
 		let isCatLover: Bool
 		let isDogLover: Bool
 		let skills: [String]
 		static func fromJSONDictionary(info: [String: AnyObject]) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
 			let gender = info["gender"] as? UnknownType
+			guard let introduction = info["introduction"] as? String else { return nil }
 			guard let isCatLover = info["is_cat_lover"] as? Bool else { return nil }
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
-			return Detail(age: age, gender: gender, isCatLover: isCatLover, isDogLover: isDogLover, skills: skills)
+			return Detail(age: age, gender: gender, introduction: introduction, isCatLover: isCatLover, isDogLover: isDogLover, skills: skills)
 		}
 	}
 	let detail: Detail
