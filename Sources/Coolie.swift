@@ -317,7 +317,7 @@ public class Coolie: NSObject {
         func scanNumber() -> Token? {
 
             let symbolSet = NSMutableCharacterSet.decimalDigitCharacterSet()
-            symbolSet.addCharactersInString(".")
+            symbolSet.addCharactersInString(".-")
 
             var string: NSString?
 
