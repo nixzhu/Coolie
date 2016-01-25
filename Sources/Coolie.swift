@@ -48,8 +48,6 @@ public class Coolie: NSObject {
 
     private enum Value {
 
-        case Null
-
         case Bool(Swift.Bool)
         enum NumberType {
             case Int(Swift.Int)
@@ -58,181 +56,10 @@ public class Coolie: NSObject {
         case Number(NumberType)
         case String(Swift.String)
 
+        case Null
+
         indirect case Dictionary([Swift.String: Value])
         indirect case Array(name: Swift.String?, values: [Value])
-
-        var type: Swift.String {
-            switch self {
-            case .Bool:
-                return "Bool"
-            case .Number(let number):
-                switch number {
-                case .Int:
-                    return "Int"
-                case .Double:
-                    return "Double"
-                }
-            case .String:
-                return "String"
-            case .Null:
-                return "UnknownType?"
-            default:
-                fatalError("Unknown type")
-            }
-        }
-
-        var isDictionaryOrArray: Swift.Bool {
-            switch self {
-            case .Dictionary:
-                return true
-            case .Array:
-                return true
-            default:
-                return false
-            }
-        }
-
-        var isDictionary: Swift.Bool {
-            switch self {
-            case .Dictionary:
-                return true
-            default:
-                return false
-            }
-        }
-
-        var isArray: Swift.Bool {
-            switch self {
-            case .Array:
-                return true
-            default:
-                return false
-            }
-        }
-
-        var isNull: Swift.Bool {
-            switch self {
-            case .Null:
-                return true
-            default:
-                return false
-            }
-        }
-
-        func printAtLevel(level: Int, modelName: Swift.String? = nil) {
-
-            func indentLevel(level: Int) {
-                for _ in 0..<level {
-                    print("\t", terminator: "")
-                }
-            }
-
-            switch self {
-
-            case .Bool, .Number, .String, .Null:
-                print(type)
-
-            case .Dictionary(let info):
-                // struct name
-                indentLevel(level)
-                if let modelName = modelName {
-                    print("struct \(modelName) {")
-                } else {
-                    print("struct Model {")
-                }
-
-                // properties
-                for key in info.keys.sort() {
-                    if let value = info[key] {
-                        if value.isDictionaryOrArray {
-                            value.printAtLevel(level + 1, modelName: key.capitalizedString)
-                            indentLevel(level + 1)
-                            if value.isArray {
-                                if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
-                                    print("let \(key.coolie_lowerCamelCase): [\(first.type)]", terminator: "\n")
-                                } else {
-                                    print("let \(key.coolie_lowerCamelCase): [\(key.capitalizedString.coolie_dropLastCharacter)]", terminator: "\n")
-                                }
-                            } else {
-                                print("let \(key.coolie_lowerCamelCase): \(key.capitalizedString)", terminator: "\n")
-                            }
-                        } else {
-                            indentLevel(level + 1)
-                            print("let \(key.coolie_lowerCamelCase): ", terminator: "")
-                            value.printAtLevel(level)
-                        }
-                    }
-                }
-
-                // generate method
-                indentLevel(level + 1)
-                if let modelName = modelName {
-                    print("static func fromJSONDictionary(info: [String: AnyObject]) -> \(modelName)? {")
-                } else {
-                    print("static func fromJSONDictionary(info: [String: AnyObject]) -> Model? {")
-                }
-                for key in info.keys.sort() {
-                    if let value = info[key] {
-                        if value.isDictionaryOrArray {
-                            if value.isDictionary {
-                                indentLevel(level + 2)
-                                print("guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { return nil }")
-                                indentLevel(level + 2)
-                                print("guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString).fromJSONDictionary(\(key.coolie_lowerCamelCase)JSONDictionary) else { return nil }")
-                            } else if value.isArray {
-                                if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
-                                    indentLevel(level + 2)
-                                    if first.isNull {
-                                        print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
-                                    } else {
-                                        print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(first.type)] else { return nil }")
-                                    }
-                                } else {
-                                    indentLevel(level + 2)
-                                    print("guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { return nil }")
-                                    indentLevel(level + 2)
-                                    print("let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter).fromJSONDictionary($0) }).flatMap({ $0 })")
-                                }
-                            }
-                        } else {
-                            indentLevel(level + 2)
-                            if value.isNull {
-                                print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
-                            } else {
-                                print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { return nil }")
-                            }
-                        }
-                    }
-                }
-
-                // return model
-                indentLevel(level + 2)
-                if let modelName = modelName {
-                    print("return \(modelName)(", terminator: "")
-                } else {
-                    print("return Model(", terminator: "")
-                }
-                let lastIndex = info.keys.count - 1
-                for (index, key) in info.keys.sort().enumerate() {
-                    let suffix = (index == lastIndex) ? ")" : ", "
-                    print("\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix, terminator: "")
-                }
-                print("")
-
-                indentLevel(level + 1)
-                print("}")
-
-                indentLevel(level)
-                print("}")
-
-            case .Array(let name, let values):
-                if let first = values.first {
-                    if first.isDictionaryOrArray {
-                        first.printAtLevel(level, modelName: name?.coolie_dropLastCharacter)
-                    }
-                }
-            }
-        }
     }
 
     private func generateTokens() -> [Token] {
@@ -597,6 +424,185 @@ public class Coolie: NSObject {
         }
 
         return parseValue()
+    }
+}
+
+private extension Coolie.Value {
+
+    var type: Swift.String {
+        switch self {
+        case .Bool:
+            return "Bool"
+        case .Number(let number):
+            switch number {
+            case .Int:
+                return "Int"
+            case .Double:
+                return "Double"
+            }
+        case .String:
+            return "String"
+        case .Null:
+            return "UnknownType?"
+        default:
+            fatalError("Unknown type")
+        }
+    }
+
+    var isDictionaryOrArray: Swift.Bool {
+        switch self {
+        case .Dictionary:
+            return true
+        case .Array:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var isDictionary: Swift.Bool {
+        switch self {
+        case .Dictionary:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var isArray: Swift.Bool {
+        switch self {
+        case .Array:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var isNull: Swift.Bool {
+        switch self {
+        case .Null:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+private extension Coolie.Value {
+
+    func printAtLevel(level: Int, modelName: Swift.String? = nil) {
+
+        func indentLevel(level: Int) {
+            for _ in 0..<level {
+                print("\t", terminator: "")
+            }
+        }
+
+        switch self {
+
+        case .Bool, .Number, .String, .Null:
+            print(type)
+
+        case .Dictionary(let info):
+            // struct name
+            indentLevel(level)
+            if let modelName = modelName {
+                print("struct \(modelName) {")
+            } else {
+                print("struct Model {")
+            }
+
+            // properties
+            for key in info.keys.sort() {
+                if let value = info[key] {
+                    if value.isDictionaryOrArray {
+                        value.printAtLevel(level + 1, modelName: key.capitalizedString)
+                        indentLevel(level + 1)
+                        if value.isArray {
+                            if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
+                                print("let \(key.coolie_lowerCamelCase): [\(first.type)]", terminator: "\n")
+                            } else {
+                                print("let \(key.coolie_lowerCamelCase): [\(key.capitalizedString.coolie_dropLastCharacter)]", terminator: "\n")
+                            }
+                        } else {
+                            print("let \(key.coolie_lowerCamelCase): \(key.capitalizedString)", terminator: "\n")
+                        }
+                    } else {
+                        indentLevel(level + 1)
+                        print("let \(key.coolie_lowerCamelCase): ", terminator: "")
+                        value.printAtLevel(level)
+                    }
+                }
+            }
+
+            // generate method
+            indentLevel(level + 1)
+            if let modelName = modelName {
+                print("static func fromJSONDictionary(info: [String: AnyObject]) -> \(modelName)? {")
+            } else {
+                print("static func fromJSONDictionary(info: [String: AnyObject]) -> Model? {")
+            }
+            for key in info.keys.sort() {
+                if let value = info[key] {
+                    if value.isDictionaryOrArray {
+                        if value.isDictionary {
+                            indentLevel(level + 2)
+                            print("guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { return nil }")
+                            indentLevel(level + 2)
+                            print("guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString).fromJSONDictionary(\(key.coolie_lowerCamelCase)JSONDictionary) else { return nil }")
+                        } else if value.isArray {
+                            if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
+                                indentLevel(level + 2)
+                                if first.isNull {
+                                    print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
+                                } else {
+                                    print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(first.type)] else { return nil }")
+                                }
+                            } else {
+                                indentLevel(level + 2)
+                                print("guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { return nil }")
+                                indentLevel(level + 2)
+                                print("let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter).fromJSONDictionary($0) }).flatMap({ $0 })")
+                            }
+                        }
+                    } else {
+                        indentLevel(level + 2)
+                        if value.isNull {
+                            print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
+                        } else {
+                            print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { return nil }")
+                        }
+                    }
+                }
+            }
+
+            // return model
+            indentLevel(level + 2)
+            if let modelName = modelName {
+                print("return \(modelName)(", terminator: "")
+            } else {
+                print("return Model(", terminator: "")
+            }
+            let lastIndex = info.keys.count - 1
+            for (index, key) in info.keys.sort().enumerate() {
+                let suffix = (index == lastIndex) ? ")" : ", "
+                print("\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix, terminator: "")
+            }
+            print("")
+
+            indentLevel(level + 1)
+            print("}")
+
+            indentLevel(level)
+            print("}")
+
+        case .Array(let name, let values):
+            if let first = values.first {
+                if first.isDictionaryOrArray {
+                    first.printAtLevel(level, modelName: name?.coolie_dropLastCharacter)
+                }
+            }
+        }
     }
 }
 
