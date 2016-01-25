@@ -342,15 +342,23 @@ public class Coolie: NSObject {
                         dictionary[key] = value
                     }
 
-                    let token = tokens[next]
-                    if case .EndObject = token {
-                        next++
-                        return .Dictionary(dictionary)
-                    }
+                    if let token = tokens[safe: next] {
 
-                    guard let _ = parseComma() else {
-                        print("Expect comma")
-                        break
+                        if token.isEndObject {
+                            next++
+                            return .Dictionary(dictionary)
+
+                        } else {
+                            guard let _ = parseComma() else {
+                                print("Expect comma")
+                                break
+                            }
+
+                            guard let nextToken = tokens[safe: next] where !nextToken.isEndObject else {
+                                print("Invalid JSON, expect more key : value")
+                                break
+                            }
+                        }
                     }
                 }
             }
@@ -481,6 +489,18 @@ private extension Coolie.Value {
     var isNull: Swift.Bool {
         switch self {
         case .Null:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+private extension Coolie.Token {
+
+    var isEndObject: Swift.Bool {
+        switch self {
+        case .EndObject:
             return true
         default:
             return false
@@ -622,5 +642,12 @@ private extension String {
         return parts.enumerate().map({ index, part in
             return index == 0 ? part : part.capitalizedString
         }).joinWithSeparator("")
+    }
+}
+
+private extension Array {
+
+    subscript (safe index: Int) -> Element? {
+        return index >= 0 && index < count ? self[index] : nil
     }
 }
