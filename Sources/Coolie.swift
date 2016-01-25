@@ -305,15 +305,23 @@ public class Coolie: NSObject {
 
                     array.append(value)
 
-                    let token = tokens[next]
+                    if let token = tokens[safe: next] {
 
-                    if case .EndArray = token {
-                        next++
-                        return .Array(name: name, values: array)
-                    }
+                        if case .EndArray = token {
+                            next++
+                            return .Array(name: name, values: array)
 
-                    guard let _ = parseComma() else {
-                        break
+                        } else {
+                            guard let _ = parseComma() else {
+                                print("Expect comma")
+                                break
+                            }
+
+                            guard let nextToken = tokens[safe: next] where nextToken.isNotEndArray else {
+                                print("Invalid JSON, comma at end of array")
+                                break
+                            }
+                        }
                     }
                 }
 
@@ -344,7 +352,7 @@ public class Coolie: NSObject {
 
                     if let token = tokens[safe: next] {
 
-                        if token.isEndObject {
+                        if case .EndObject = token {
                             next++
                             return .Dictionary(dictionary)
 
@@ -354,8 +362,8 @@ public class Coolie: NSObject {
                                 break
                             }
 
-                            guard let nextToken = tokens[safe: next] where !nextToken.isEndObject else {
-                                print("Invalid JSON, expect more key : value")
+                            guard let nextToken = tokens[safe: next] where nextToken.isNotEndObject else {
+                                print("Invalid JSON, comma at end of object")
                                 break
                             }
                         }
@@ -498,12 +506,21 @@ private extension Coolie.Value {
 
 private extension Coolie.Token {
 
-    var isEndObject: Swift.Bool {
+    var isNotEndObject: Swift.Bool {
         switch self {
         case .EndObject:
-            return true
-        default:
             return false
+        default:
+            return true
+        }
+    }
+
+    var isNotEndArray: Swift.Bool {
+        switch self {
+        case .EndArray:
+            return false
+        default:
+            return true
         }
     }
 }
