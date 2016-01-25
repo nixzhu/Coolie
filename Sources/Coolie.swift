@@ -171,63 +171,53 @@ public class Coolie: NSObject {
                 } else {
                     print("static func fromJSONDictionary(info: [String: AnyObject]) -> Model? {")
                 }
-                switch self {
-                case .Dictionary(let info):
-                    for key in info.keys.sort() {
-                        if let value = info[key] {
-                            if value.isDictionaryOrArray {
-                                if value.isDictionary {
-                                    indentLevel(level + 2)
-                                    print("guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { return nil }")
-                                    indentLevel(level + 2)
-                                    print("guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString).fromJSONDictionary(\(key.coolie_lowerCamelCase)JSONDictionary) else { return nil }")
-                                } else if value.isArray {
-                                    if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
-                                        indentLevel(level + 2)
-                                        if first.isNull {
-                                            print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
-                                        } else {
-                                            print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(first.type)] else { return nil }")
-                                        }
-                                    } else {
-                                        indentLevel(level + 2)
-                                        print("guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { return nil }")
-                                        indentLevel(level + 2)
-                                        print("let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter).fromJSONDictionary($0) }).flatMap({ $0 })")
-                                    }
-                                }
-                            } else {
+                for key in info.keys.sort() {
+                    if let value = info[key] {
+                        if value.isDictionaryOrArray {
+                            if value.isDictionary {
                                 indentLevel(level + 2)
-                                if value.isNull {
-                                    print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
+                                print("guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { return nil }")
+                                indentLevel(level + 2)
+                                print("guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString).fromJSONDictionary(\(key.coolie_lowerCamelCase)JSONDictionary) else { return nil }")
+                            } else if value.isArray {
+                                if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
+                                    indentLevel(level + 2)
+                                    if first.isNull {
+                                        print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
+                                    } else {
+                                        print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(first.type)] else { return nil }")
+                                    }
                                 } else {
-                                    print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { return nil }")
+                                    indentLevel(level + 2)
+                                    print("guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { return nil }")
+                                    indentLevel(level + 2)
+                                    print("let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter).fromJSONDictionary($0) }).flatMap({ $0 })")
                                 }
+                            }
+                        } else {
+                            indentLevel(level + 2)
+                            if value.isNull {
+                                print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
+                            } else {
+                                print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { return nil }")
                             }
                         }
                     }
-                default:
-                    break
                 }
 
                 // return model
-                switch self {
-                case .Dictionary(let info):
-                    indentLevel(level + 2)
-                    if let modelName = modelName {
-                        print("return \(modelName)(", terminator: "")
-                    } else {
-                        print("return Model(", terminator: "")
-                    }
-                    let lastIndex = info.keys.count - 1
-                    for (index, key) in info.keys.sort().enumerate() {
-                        let suffix = (index == lastIndex) ? ")" : ", "
-                        print("\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix, terminator: "")
-                    }
-                    print("")
-                default:
-                    break
+                indentLevel(level + 2)
+                if let modelName = modelName {
+                    print("return \(modelName)(", terminator: "")
+                } else {
+                    print("return Model(", terminator: "")
                 }
+                let lastIndex = info.keys.count - 1
+                for (index, key) in info.keys.sort().enumerate() {
+                    let suffix = (index == lastIndex) ? ")" : ", "
+                    print("\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix, terminator: "")
+                }
+                print("")
 
                 indentLevel(level + 1)
                 print("}")
