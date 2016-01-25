@@ -18,12 +18,12 @@ Swift 2.1
     "age": 18,
     "gender": null,
     "is_dog_lover": true,
-    "is_cat_lover": false,
     "skills": [
       "Swift on iOS",
       "C on Linux"
     ],
-    "motto": "爱你所爱，恨你所恨。"
+    "motto": "爱你所爱，恨你所恨。",
+    "daily_fantasy_hours": [-0.1, 3.5, 4.2]
   },
   "projects": [
     {
@@ -47,19 +47,19 @@ It will generate:
 struct User {
 	struct Detail {
 		let age: Int
+		let dailyFantasyHours: [Double]
 		let gender: UnknownType?
-		let isCatLover: Bool
 		let isDogLover: Bool
 		let motto: String
 		let skills: [String]
 		static func fromJSONDictionary(info: [String: AnyObject]) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
+			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
 			let gender = info["gender"] as? UnknownType
-			guard let isCatLover = info["is_cat_lover"] as? Bool else { return nil }
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
-			return Detail(age: age, gender: gender, isCatLover: isCatLover, isDogLover: isDogLover, motto: motto, skills: skills)
+			return Detail(age: age, dailyFantasyHours: dailyFantasyHours, gender: gender, isDogLover: isDogLover, motto: motto, skills: skills)
 		}
 	}
 	let detail: Detail

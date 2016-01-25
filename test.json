@@ -4,12 +4,12 @@
     "age": 18,
     "gender": null,
     "is_dog_lover": true,
-    "is_cat_lover": false,
     "skills": [
       "Swift on iOS",
       "C on Linux"
     ],
-    "motto": "爱你所爱，恨你所恨。"
+    "motto": "爱你所爱，恨你所恨。",
+    "daily_fantasy_hours": [-0.1, 3.5, 4.2]
   },
   "projects": [
     {
