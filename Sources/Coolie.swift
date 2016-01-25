@@ -244,11 +244,19 @@ public class Coolie: NSObject {
 
         let tokens = generateTokens()
 
+        guard !tokens.isEmpty else {
+            print("No tokens")
+            return nil
+        }
+
         var next = 0
 
         func parseValue() -> Value? {
 
-            let token = tokens[next]
+            guard let token = tokens[safe: next] else {
+                print("No token for parseValue")
+                return nil
+            }
 
             switch token {
 
@@ -257,9 +265,10 @@ public class Coolie: NSObject {
                 var arrayName: String?
                 let nameIndex = next - 2
                 if nameIndex >= 0 {
-                    let nameToken = tokens[nameIndex]
-                    if case .String(let name) = nameToken {
-                        arrayName = name.capitalizedString
+                    if let nameToken = tokens[safe: nameIndex] {
+                        if case .String(let name) = nameToken {
+                            arrayName = name.capitalizedString
+                        }
                     }
                 }
 
@@ -289,7 +298,10 @@ public class Coolie: NSObject {
 
         func parseArray(name name: String? = nil) -> Value? {
 
-            let token = tokens[next]
+            guard let token = tokens[safe: next] else {
+                print("No token for parseArray")
+                return nil
+            }
 
             var array = [Value]()
 
@@ -331,7 +343,10 @@ public class Coolie: NSObject {
 
         func parseObject() -> Value? {
 
-            let token = tokens[next]
+            guard let token = tokens[safe: next] else {
+                print("No token for parseObject")
+                return nil
+            }
 
             var dictionary = [String: Value]()
 
@@ -376,7 +391,15 @@ public class Coolie: NSObject {
 
         func parseColon() -> Value? {
 
-            let token = tokens[next++]
+            defer {
+                next += 1
+            }
+
+            guard let token = tokens[safe: next] else {
+                print("No token for parseColon")
+                return nil
+            }
+
             if case .Colon(let string) = token {
                 return .String(string)
             }
@@ -386,7 +409,15 @@ public class Coolie: NSObject {
 
         func parseComma() -> Value? {
 
-            let token = tokens[next++]
+            defer {
+                next += 1
+            }
+
+            guard let token = tokens[safe: next] else {
+                print("No token for parseComma")
+                return nil
+            }
+
             if case .Comma(let string) = token {
                 return .String(string)
             }
@@ -396,7 +427,15 @@ public class Coolie: NSObject {
 
         func parseBool() -> Value? {
 
-            let token = tokens[next++]
+            defer {
+                next += 1
+            }
+
+            guard let token = tokens[safe: next] else {
+                print("No token for parseBool")
+                return nil
+            }
+
             if case .Bool(let bool) = token {
                 return .Bool(bool)
             }
@@ -406,7 +445,15 @@ public class Coolie: NSObject {
 
         func parseNumber() -> Value? {
 
-            let token = tokens[next++]
+            defer {
+                next += 1
+            }
+
+            guard let token = tokens[safe: next] else {
+                print("No token for parseNumber")
+                return nil
+            }
+
             if case .Number(let number) = token {
                 switch number {
                 case .Int(let int):
@@ -421,7 +468,15 @@ public class Coolie: NSObject {
 
         func parseString() -> Value? {
 
-            let token = tokens[next++]
+            defer {
+                next += 1
+            }
+
+            guard let token = tokens[safe: next] else {
+                print("No token for parseString")
+                return nil
+            }
+
             if case .String(let string) = token {
                 return .String(string)
             }
@@ -431,7 +486,15 @@ public class Coolie: NSObject {
 
         func parseNull() -> Value? {
 
-            let token = tokens[next++]
+            defer {
+                next += 1
+            }
+
+            guard let token = tokens[safe: next] else {
+                print("No token for parseNull")
+                return nil
+            }
+
             if case .Null = token {
                 return .Null
             }
