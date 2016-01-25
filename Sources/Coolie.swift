@@ -371,6 +371,8 @@ public class Coolie: NSObject {
 
         while !scanner.atEnd {
 
+            let previousScanLocation = scanner.scanLocation
+
             if let token = scanBeginObject() {
                 tokens.append(token)
             }
@@ -409,6 +411,12 @@ public class Coolie: NSObject {
 
             if let token = scanNull() {
                 tokens.append(token)
+            }
+
+            let currentScanLocation = scanner.scanLocation
+            guard currentScanLocation > previousScanLocation else {
+                print("Not found valid token")
+                break
             }
         }
 
