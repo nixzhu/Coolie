@@ -27,10 +27,6 @@ Swift 2.1
   },
   "projects": [
     {
-      "name": "Navi",
-      "url": "https://github.com/nixzhu/Navi"
-    },
-    {
       "name": "Coolie",
       "url": "https://github.com/nixzhu/Coolie"
     }
