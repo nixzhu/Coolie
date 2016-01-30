@@ -62,6 +62,21 @@ public class Coolie: NSObject {
         indirect case Array(name: Swift.String?, values: [Value])
     }
 
+    lazy var numberScanningSet: NSCharacterSet = {
+        let symbolSet = NSMutableCharacterSet.decimalDigitCharacterSet()
+        symbolSet.addCharactersInString(".-")
+        return symbolSet
+    }()
+
+    lazy var stringScanningSet: NSCharacterSet = {
+        let symbolSet = NSMutableCharacterSet.alphanumericCharacterSet()
+        symbolSet.formUnionWithCharacterSet(NSCharacterSet.punctuationCharacterSet())
+        symbolSet.formUnionWithCharacterSet(NSCharacterSet.symbolCharacterSet())
+        symbolSet.formUnionWithCharacterSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+        symbolSet.removeCharactersInString("\"")
+        return symbolSet
+    }()
+
     private func generateTokens() -> [Token] {
 
         func scanBeginObject() -> Token? {
@@ -133,12 +148,9 @@ public class Coolie: NSObject {
 
         func scanNumber() -> Token? {
 
-            let symbolSet = NSMutableCharacterSet.decimalDigitCharacterSet()
-            symbolSet.addCharactersInString(".-")
-
             var string: NSString?
 
-            if scanner.scanCharactersFromSet(symbolSet, intoString: &string) {
+            if scanner.scanCharactersFromSet(numberScanningSet, intoString: &string) {
 
                 if let string = string as? String {
 
@@ -156,16 +168,10 @@ public class Coolie: NSObject {
 
         func scanString() -> Token? {
 
-            let symbolSet = NSMutableCharacterSet.alphanumericCharacterSet()
-            symbolSet.formUnionWithCharacterSet(NSCharacterSet.punctuationCharacterSet())
-            symbolSet.formUnionWithCharacterSet(NSCharacterSet.symbolCharacterSet())
-            symbolSet.formUnionWithCharacterSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
-            symbolSet.removeCharactersInString("\"")
-
             var string: NSString?
 
             if scanner.scanString("\"", intoString: nil) &&
-                scanner.scanCharactersFromSet(symbolSet, intoString: &string) &&
+                scanner.scanCharactersFromSet(stringScanningSet, intoString: &string) &&
                 scanner.scanString("\"", intoString: nil) {
 
                     if let string = string as? String {
@@ -177,6 +183,7 @@ public class Coolie: NSObject {
         }
 
         func scanNull() -> Token? {
+
             if scanner.scanString("null", intoString: nil) {
                 return .Null
             }
