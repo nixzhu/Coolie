@@ -613,11 +613,7 @@ private extension Coolie.Value {
         case .Dictionary(let info):
             // struct name
             indentLevel(level)
-            if let modelName = modelName {
-                print("struct \(modelName) {")
-            } else {
-                print("struct Model {")
-            }
+            print("struct \(modelName ?? "Model") {")
 
             // properties
             for key in info.keys.sort() {
@@ -644,11 +640,7 @@ private extension Coolie.Value {
 
             // generate method
             indentLevel(level + 1)
-            if let modelName = modelName {
-                print("static func fromJSONDictionary(info: [String: AnyObject]) -> \(modelName)? {")
-            } else {
-                print("static func fromJSONDictionary(info: [String: AnyObject]) -> Model? {")
-            }
+            print("static func fromJSONDictionary(info: [String: AnyObject]) -> \(modelName ?? "Model")? {")
             for key in info.keys.sort() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
@@ -685,11 +677,7 @@ private extension Coolie.Value {
 
             // return model
             indentLevel(level + 2)
-            if let modelName = modelName {
-                print("return \(modelName)(", terminator: "")
-            } else {
-                print("return Model(", terminator: "")
-            }
+            print("return \(modelName ?? "Model")(", terminator: "")
             let lastIndex = info.keys.count - 1
             for (index, key) in info.keys.sort().enumerate() {
                 let suffix = (index == lastIndex) ? ")" : ", "
