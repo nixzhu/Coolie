@@ -87,6 +87,8 @@ struct User {
 
 Pretty cool, ah?
 
+Now you can modify the models (the name of properties or their type) if you need.
+
 ## Contact
 
 NIX [@nixzhu](https://twitter.com/nixzhu)
