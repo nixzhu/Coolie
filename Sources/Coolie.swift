@@ -713,7 +713,14 @@ private extension String {
     }
 
     var coolie_lowerCamelCase: String {
-        let parts = self.componentsSeparatedByString("_")
+
+        let symbolSet = NSMutableCharacterSet.alphanumericCharacterSet()
+        symbolSet.addCharactersInString("_")
+        symbolSet.invert()
+
+        let validString = self.componentsSeparatedByCharactersInSet(symbolSet).joinWithSeparator("_")
+        let parts = validString.componentsSeparatedByString("_")
+
         return parts.enumerate().map({ index, part in
             return index == 0 ? part : part.capitalizedString
         }).joinWithSeparator("")
