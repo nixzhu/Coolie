@@ -170,6 +170,10 @@ public class Coolie: NSObject {
 
             var string: NSString?
 
+            if scanner.scanString("\"\"", intoString: nil) {
+                return .String("")
+            }
+
             if scanner.scanString("\"", intoString: nil) &&
                 scanner.scanCharactersFromSet(stringScanningSet, intoString: &string) &&
                 scanner.scanString("\"", intoString: nil) {
