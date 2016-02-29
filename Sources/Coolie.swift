@@ -8,7 +8,7 @@
 
 import Foundation
 
-public class Coolie: NSObject {
+public class Coolie {
 
     private let scanner: NSScanner
 
@@ -60,6 +60,8 @@ public class Coolie: NSObject {
 
         indirect case Dictionary([Swift.String: Value])
         indirect case Array(name: Swift.String?, values: [Value])
+
+
     }
 
     lazy var numberScanningSet: NSCharacterSet = {
@@ -601,6 +603,35 @@ private extension Coolie.Token {
 
 private extension Coolie.Value {
 
+    func unionValues(values: [Coolie.Value]) -> Coolie.Value? {
+
+        guard values.count > 1 else {
+            return values.first
+        }
+
+        if let first = values.first, case .Dictionary(let firstInfo) = first {
+
+            var info: [Swift.String: Coolie.Value] = firstInfo
+
+            let keys = firstInfo.keys
+
+            for i in 1..<values.count {
+                let next = values[i]
+                if case .Dictionary(let nextInfo) = next {
+                    for key in keys {
+                        if let value = nextInfo[key] where !value.isNull {
+                            info[key] = value
+                        }
+                    }
+                }
+            }
+
+            return .Dictionary(info)
+        }
+
+        return values.first
+    }
+
     func printAtLevel(level: Int, modelName: Swift.String? = nil) {
 
         func indentLevel(level: Int) {
@@ -626,8 +657,8 @@ private extension Coolie.Value {
                         value.printAtLevel(level + 1, modelName: key.capitalizedString)
                         indentLevel(level + 1)
                         if value.isArray {
-                            if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
-                                print("let \(key.coolie_lowerCamelCase): [\(first.type)]", terminator: "\n")
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                                print("let \(key.coolie_lowerCamelCase): [\(unionValue.type)]", terminator: "\n")
                             } else {
                                 print("let \(key.coolie_lowerCamelCase): [\(key.capitalizedString.coolie_dropLastCharacter)]", terminator: "\n")
                             }
@@ -654,12 +685,12 @@ private extension Coolie.Value {
                             indentLevel(level + 2)
                             print("guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString).fromJSONDictionary(\(key.coolie_lowerCamelCase)JSONDictionary) else { return nil }")
                         } else if value.isArray {
-                            if case .Array(_, let values) = value, let first = values.first where !first.isDictionaryOrArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
-                                if first.isNull {
+                                if unionValue.isNull {
                                     print("let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType")
                                 } else {
-                                    print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(first.type)] else { return nil }")
+                                    print("guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { return nil }")
                                 }
                             } else {
                                 indentLevel(level + 2)
@@ -696,9 +727,9 @@ private extension Coolie.Value {
             print("}")
 
         case .Array(let name, let values):
-            if let first = values.first {
-                if first.isDictionaryOrArray {
-                    first.printAtLevel(level, modelName: name?.coolie_dropLastCharacter)
+            if let unionValue = unionValues(values) {
+                if unionValue.isDictionaryOrArray {
+                    unionValue.printAtLevel(level, modelName: name?.coolie_dropLastCharacter)
                 }
             }
         }
