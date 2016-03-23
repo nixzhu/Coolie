@@ -285,11 +285,11 @@ public class Coolie {
                     }
                 }
 
-                next++
+                next += 1
                 return parseArray(name: arrayName)
 
             case .BeginObject:
-                next++
+                next += 1
                 return parseObject()
 
             case .Bool:
@@ -319,7 +319,7 @@ public class Coolie {
             var array = [Value]()
 
             if case .EndArray = token {
-                next++
+                next += 1
                 return .Array(name: name, values: array)
 
             } else {
@@ -333,7 +333,7 @@ public class Coolie {
                     if let token = tokens[safe: next] {
 
                         if case .EndArray = token {
-                            next++
+                            next += 1
                             return .Array(name: name, values: array)
 
                         } else {
@@ -364,7 +364,7 @@ public class Coolie {
             var dictionary = [String: Value]()
 
             if case .EndObject = token {
-                next++
+                next += 1
                 return .Dictionary(dictionary)
 
             } else {
@@ -381,7 +381,7 @@ public class Coolie {
                     if let token = tokens[safe: next] {
 
                         if case .EndObject = token {
-                            next++
+                            next += 1
                             return .Dictionary(dictionary)
 
                         } else {
