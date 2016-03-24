@@ -52,35 +52,46 @@ struct User {
 		let isDogLover: Bool
 		let motto: String
 		let skills: [String]
-		static func fromJSONDictionary(info: [String: AnyObject]) -> Detail? {
+		init?(_ info: [String: AnyObject]) {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
-			return Detail(age: age, dailyFantasyHours: dailyFantasyHours, gender: gender, isDogLover: isDogLover, motto: motto, skills: skills)
+			self.age = age
+			self.dailyFantasyHours = dailyFantasyHours
+			self.gender = gender
+			self.isDogLover = isDogLover
+			self.motto = motto
+			self.skills = skills
 		}
 	}
 	let detail: Detail
 	let name: String
 	struct Project {
+		let description: String
 		let name: String
 		let url: String
-		static func fromJSONDictionary(info: [String: AnyObject]) -> Project? {
+		init?(_ info: [String: AnyObject]) {
+			guard let description = info["description"] as? String else { return nil }
 			guard let name = info["name"] as? String else { return nil }
 			guard let url = info["url"] as? String else { return nil }
-			return Project(name: name, url: url)
+			self.description = description
+			self.name = name
+			self.url = url
 		}
 	}
 	let projects: [Project]
-	static func fromJSONDictionary(info: [String: AnyObject]) -> User? {
+	init?(_ info: [String: AnyObject]) {
 		guard let detailJSONDictionary = info["detail"] as? [String: AnyObject] else { return nil }
-		guard let detail = Detail.fromJSONDictionary(detailJSONDictionary) else { return nil }
+		guard let detail = Detail(detailJSONDictionary) else { return nil }
 		guard let name = info["name"] as? String else { return nil }
 		guard let projectsJSONArray = info["projects"] as? [[String: AnyObject]] else { return nil }
-		let projects = projectsJSONArray.map({ Project.fromJSONDictionary($0) }).flatMap({ $0 })
-		return User(detail: detail, name: name, projects: projects)
+		let projects = projectsJSONArray.map({ Project($0) }).flatMap({ $0 })
+		self.detail = detail
+		self.name = name
+		self.projects = projects
 	}
 }
 ```
