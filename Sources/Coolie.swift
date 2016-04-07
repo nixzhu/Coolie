@@ -33,7 +33,7 @@ public class Coolie {
         case BeginArray(Swift.String)       // [
         case EndArray(Swift.String)         // ]
 
-        case Colon(Swift.String)            // ;
+        case Colon(Swift.String)            // :
         case Comma(Swift.String)            // ,
 
         case Bool(Swift.Bool)               // true or false
