@@ -42,7 +42,7 @@ public class Coolie {
             case Double(Swift.Double)
         }
         case Number(NumberType)             // 42, 99.99
-        case String(Swift.String)           // "nix", ...
+        case String(Swift.String)           // "name", "NIX", ...
 
         case Null
     }
@@ -61,8 +61,6 @@ public class Coolie {
 
         indirect case Dictionary([Swift.String: Value])
         indirect case Array(name: Swift.String?, values: [Value])
-
-
     }
 
     lazy var numberScanningSet: NSCharacterSet = {
