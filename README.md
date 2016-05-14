@@ -103,7 +103,7 @@ Now you can modify the models (the name of properties or their type) if you need
 You can specify constructor name like following command:
 
 ``` bash
-./coolie -i test.json --model-name User --constructor-name fromJSONDictionary
+$ ./coolie -i test.json --model-name User --constructor-name fromJSONDictionary
 ```
 
 It will generate:
