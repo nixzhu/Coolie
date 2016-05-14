@@ -35,13 +35,22 @@ func main(arguments: [String]) {
         return
     }
 
-    guard let JSONString = String(data: data, encoding: NSUTF8StringEncoding) else {
+    guard let jsonString = String(data: data, encoding: NSUTF8StringEncoding) else {
         print("File is NOT encoding with UTF8!")
         return
     }
 
-    let coolie = Coolie(JSONString: JSONString)
-    coolie.printModelWithName(modelName)
+    let coolie = Coolie(jsonString)
+
+    let modelTypeOption = Arguments.Option.Long(key: "model-type")
+
+    if let modelType = arguments.valueOfOption(modelTypeOption) {
+
+    } else {
+        if let model = coolie.generateModelWithName(modelName) {
+            print(model)
+        }
+    }
 }
 
 main(Process.arguments)
