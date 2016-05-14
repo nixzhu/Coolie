@@ -44,16 +44,19 @@ func main(arguments: [String]) {
 
     let modelTypeOption = Arguments.Option.Long(key: "model-type")
 
+    let constructorNameOption = Arguments.Option.Long(key: "constructor-name")
+    let constructorName = arguments.valueOfOption(constructorNameOption)
+
     if let modelType = arguments.valueOfOption(modelTypeOption) {
         if let type = Coolie.ModelType(rawValue: modelType.lowercaseString) {
-            if let model = coolie.generateModel(name: modelName, type: type) {
+            if let model = coolie.generateModel(name: modelName, type: type, constructorName: constructorName) {
                 print(model)
                 return
             }
         }
 
     } else {
-        if let model = coolie.generateModel(name: modelName, type: Coolie.ModelType.Struct) {
+        if let model = coolie.generateModel(name: modelName, type: Coolie.ModelType.Struct, constructorName: constructorName) {
             print(model)
             return
         }
