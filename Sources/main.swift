@@ -10,23 +10,27 @@ import Foundation
 
 func main(arguments: [String]) {
 
-    guard arguments.count == 3 else {
-        print("Usage: $ coolie JSONFileName ModelName")
+    let arguments = Arguments(arguments)
+
+    let inputFilePathOption = Arguments.Option.Mixed(shortKey: "i", longKey: "input-file-path")
+    let modelNameOption = Arguments.Option.Long(key: "model-name")
+
+    guard let inputFilePath = arguments.valueOfOption(inputFilePathOption), modelName = arguments.valueOfOption(modelNameOption) else {
+        print("Usage: $ coolie -i JSONFilePath --model-name ModelName")
         return
     }
 
-    let path = arguments[1]
-    guard NSFileManager.defaultManager().fileExistsAtPath(path) else {
-        print("File NOT found at \(path)")
+    guard NSFileManager.defaultManager().fileExistsAtPath(inputFilePath) else {
+        print("File NOT found at \(inputFilePath)")
         return
     }
 
-    guard NSFileManager.defaultManager().isReadableFileAtPath(path) else {
-        print("No permission to read file at \(path)")
+    guard NSFileManager.defaultManager().isReadableFileAtPath(inputFilePath) else {
+        print("No permission to read file at \(inputFilePath)")
         return
     }
 
-    guard let data = NSFileManager.defaultManager().contentsAtPath(path) else {
+    guard let data = NSFileManager.defaultManager().contentsAtPath(inputFilePath) else {
         print("File is empty!")
         return
     }
@@ -37,7 +41,6 @@ func main(arguments: [String]) {
     }
 
     let coolie = Coolie(JSONString: JSONString)
-    let modelName = arguments[2]
     coolie.printModelWithName(modelName)
 }
 

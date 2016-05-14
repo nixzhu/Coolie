@@ -8,7 +8,7 @@
 
 import Foundation
 
-public class Coolie {
+final public class Coolie {
 
     private let scanner: NSScanner
 
@@ -863,12 +863,5 @@ private extension String {
         return parts.enumerate().map({ index, part in
             return index == 0 ? part : part.capitalizedString
         }).joinWithSeparator("")
-    }
-}
-
-private extension Array {
-
-    subscript (safe index: Int) -> Element? {
-        return index >= 0 && index < count ? self[index] : nil
     }
 }
