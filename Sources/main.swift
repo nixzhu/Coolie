@@ -53,7 +53,7 @@ func main(arguments: [String]) {
         }
 
     } else {
-        if let model = coolie.generateModelWithName(modelName) {
+        if let model = coolie.generateModel(name: modelName, type: Coolie.ModelType.Struct) {
             print(model)
             return
         }

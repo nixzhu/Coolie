@@ -16,20 +16,6 @@ final public class Coolie {
         scanner = NSScanner(string: jsonString)
     }
 
-    public func generateModelWithName(modelName: String) -> String? {
-
-        if let value = parse() {
-            var string = ""
-            value.generateStruct(fromLevel: 0, withModelName: modelName, intoString: &string)
-            return string
-
-        } else {
-            print("Coolie parse failed!")
-        }
-
-        return nil
-    }
-
     public enum ModelType: String {
 
         case Struct = "struct"
@@ -45,7 +31,7 @@ final public class Coolie {
             case .Struct:
                 value.generateStruct(fromLevel: 0, withModelName: name, intoString: &string)
             case .Class:
-                break
+                value.generateClass(fromLevel: 0, withModelName: name, intoString: &string)
             }
 
             return string
@@ -762,6 +748,108 @@ private extension Coolie.Value {
             if let unionValue = unionValues(values) {
                 if unionValue.isDictionaryOrArray {
                     unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, intoString: &string)
+                }
+            }
+        }
+    }
+}
+
+private extension Coolie.Value {
+
+    func generateClass(fromLevel level: Int, withModelName modelName: Swift.String? = nil, inout intoString string: Swift.String) {
+
+        func indentLevel(level: Int) {
+            for _ in 0..<level {
+                string += "\t"
+            }
+        }
+
+        switch self {
+
+        case .Bool, .Number, .String, .Null:
+            string += "\(type)\n"
+
+        case .Dictionary(let info):
+            // struct name
+            indentLevel(level)
+            string += "class \(modelName ?? "Model") {\n"
+
+            // properties
+            for key in info.keys.sort() {
+                if let value = info[key] {
+                    if value.isDictionaryOrArray {
+                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalizedString, intoString: &string)
+                        indentLevel(level + 1)
+                        if value.isArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                                string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
+                            } else {
+                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalizedString.coolie_dropLastCharacter)]\n"
+                            }
+                        } else {
+                            string += "var \(key.coolie_lowerCamelCase): \(key.capitalizedString)\n"
+                        }
+                    } else {
+                        indentLevel(level + 1)
+                        string += "var \(key.coolie_lowerCamelCase): "
+                        value.generateClass(fromLevel: level, intoString: &string)
+                    }
+                }
+            }
+
+            // generate method
+            indentLevel(level + 1)
+            string += "init?(_ info: [String: AnyObject]) {\n"
+            for key in info.keys.sort() {
+                if let value = info[key] {
+                    if value.isDictionaryOrArray {
+                        if value.isDictionary {
+                            indentLevel(level + 2)
+                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { return nil }\n"
+                            indentLevel(level + 2)
+                            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString)(\(key.coolie_lowerCamelCase)JSONDictionary) else { return nil }\n"
+                        } else if value.isArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                                indentLevel(level + 2)
+                                if unionValue.isNull {
+                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+                                } else {
+                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { return nil }\n"
+                                }
+                            } else {
+                                indentLevel(level + 2)
+                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { return nil }\n"
+                                indentLevel(level + 2)
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
+                            }
+                        }
+                    } else {
+                        indentLevel(level + 2)
+                        if value.isNull {
+                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+                        } else {
+                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { return nil }\n"
+                        }
+                    }
+                }
+            }
+
+            for key in info.keys.sort() {
+                indentLevel(level + 2)
+                let property = key.coolie_lowerCamelCase
+                string += "self.\(property) = \(property)\n"
+            }
+
+            indentLevel(level + 1)
+            string += "}\n"
+
+            indentLevel(level)
+            string += "}\n"
+
+        case .Array(let name, let values):
+            if let unionValue = unionValues(values) {
+                if unionValue.isDictionaryOrArray {
+                    unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, intoString: &string)
                 }
             }
         }
