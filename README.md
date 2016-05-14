@@ -38,7 +38,7 @@ Build coolie & run:
 
 ``` bash
 $ xcrun swiftc Sources/*.swift -o coolie
-$ ./coolie test.json User
+$ ./coolie -i test.json --model-namee User
 ```
 
 It will generate:
