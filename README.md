@@ -100,6 +100,12 @@ Pretty cool, ah?
 
 Now you can modify the models (the name of properties or their type) if you need.
 
+If you need class model, use the following command:
+
+``` bash
+$ ./coolie -i test.json --model-name User --model-type class
+```
+
 ## Contact
 
 NIX [@nixzhu](https://twitter.com/nixzhu)
