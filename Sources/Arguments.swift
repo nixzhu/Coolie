@@ -53,8 +53,8 @@ final public class Arguments {
         var i = 1
 
         while true {
-            let _a = arguments[safe: i]
-            let _b = arguments[safe: i + 1]
+            let _a = arguments[arguments_safe: i]
+            let _b = arguments[arguments_safe: i + 1]
 
             guard let a = _a else { break }
 
@@ -81,7 +81,6 @@ final public class Arguments {
             }
         }
 
-        print("keyValues: \(keyValues)")
         self.keyValues = keyValues
     }
 
@@ -134,5 +133,12 @@ private extension String {
 
     var arguments_isKey: Bool {
         return arguments_isLongKey || arguments_isShortKey
+    }
+}
+
+private extension Array {
+
+    subscript (arguments_safe index: Int) -> Element? {
+        return index >= 0 && index < count ? self[index] : nil
     }
 }

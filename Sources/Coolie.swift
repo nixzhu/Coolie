@@ -265,7 +265,7 @@ final public class Coolie {
 
         func parseValue() -> Value? {
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseValue")
                 return nil
             }
@@ -277,7 +277,7 @@ final public class Coolie {
                 var arrayName: String?
                 let nameIndex = next - 2
                 if nameIndex >= 0 {
-                    if let nameToken = tokens[safe: nameIndex] {
+                    if let nameToken = tokens[coolie_safe: nameIndex] {
                         if case .String(let name) = nameToken {
                             arrayName = name.capitalizedString
                         }
@@ -310,7 +310,7 @@ final public class Coolie {
 
         func parseArray(name name: String? = nil) -> Value? {
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseArray")
                 return nil
             }
@@ -329,7 +329,7 @@ final public class Coolie {
 
                     array.append(value)
 
-                    if let token = tokens[safe: next] {
+                    if let token = tokens[coolie_safe: next] {
 
                         if case .EndArray = token {
                             next += 1
@@ -341,7 +341,7 @@ final public class Coolie {
                                 break
                             }
 
-                            guard let nextToken = tokens[safe: next] where nextToken.isNotEndArray else {
+                            guard let nextToken = tokens[coolie_safe: next] where nextToken.isNotEndArray else {
                                 print("Invalid JSON, comma at end of array")
                                 break
                             }
@@ -355,7 +355,7 @@ final public class Coolie {
 
         func parseObject() -> Value? {
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseObject")
                 return nil
             }
@@ -377,7 +377,7 @@ final public class Coolie {
                         dictionary[key] = value
                     }
 
-                    if let token = tokens[safe: next] {
+                    if let token = tokens[coolie_safe: next] {
 
                         if case .EndObject = token {
                             next += 1
@@ -389,7 +389,7 @@ final public class Coolie {
                                 break
                             }
 
-                            guard let nextToken = tokens[safe: next] where nextToken.isNotEndObject else {
+                            guard let nextToken = tokens[coolie_safe: next] where nextToken.isNotEndObject else {
                                 print("Invalid JSON, comma at end of object")
                                 break
                             }
@@ -407,7 +407,7 @@ final public class Coolie {
                 next += 1
             }
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseColon")
                 return nil
             }
@@ -425,7 +425,7 @@ final public class Coolie {
                 next += 1
             }
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseComma")
                 return nil
             }
@@ -443,7 +443,7 @@ final public class Coolie {
                 next += 1
             }
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseBool")
                 return nil
             }
@@ -461,7 +461,7 @@ final public class Coolie {
                 next += 1
             }
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseNumber")
                 return nil
             }
@@ -484,7 +484,7 @@ final public class Coolie {
                 next += 1
             }
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseString")
                 return nil
             }
@@ -502,7 +502,7 @@ final public class Coolie {
                 next += 1
             }
 
-            guard let token = tokens[safe: next] else {
+            guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseNull")
                 return nil
             }
@@ -863,5 +863,12 @@ private extension String {
         return parts.enumerate().map({ index, part in
             return index == 0 ? part : part.capitalizedString
         }).joinWithSeparator("")
+    }
+}
+
+private extension Array {
+
+    subscript (coolie_safe index: Int) -> Element? {
+        return index >= 0 && index < count ? self[index] : nil
     }
 }
