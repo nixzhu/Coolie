@@ -30,6 +30,33 @@ final public class Coolie {
         return nil
     }
 
+    public enum ModelType: String {
+
+        case Struct = "struct"
+        case Class = "class"
+    }
+
+    public func generateModel(name name: String, type: ModelType) -> String? {
+
+        if let value = parse() {
+            var string = ""
+
+            switch type {
+            case .Struct:
+                value.generateStruct(fromLevel: 0, withModelName: name, intoString: &string)
+            case .Class:
+                break
+            }
+
+            return string
+
+        } else {
+            print("Coolie parse failed!")
+        }
+
+        return nil
+    }
+
     private enum Token {
 
         case BeginObject(Swift.String)      // {

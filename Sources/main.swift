@@ -45,10 +45,17 @@ func main(arguments: [String]) {
     let modelTypeOption = Arguments.Option.Long(key: "model-type")
 
     if let modelType = arguments.valueOfOption(modelTypeOption) {
+        if let type = Coolie.ModelType(rawValue: modelType.lowercaseString) {
+            if let model = coolie.generateModel(name: modelName, type: type) {
+                print(model)
+                return
+            }
+        }
 
     } else {
         if let model = coolie.generateModelWithName(modelName) {
             print(model)
+            return
         }
     }
 }
