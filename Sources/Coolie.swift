@@ -79,8 +79,6 @@ final public class Coolie {
 
         indirect case Dictionary([Swift.String: Value])
         indirect case Array(name: Swift.String?, values: [Value])
-
-
     }
 
     lazy var numberScanningSet: NSCharacterSet = {

@@ -5,7 +5,7 @@ Coolie parse a JSON file to generate models (& their constructors).
 
 ## Requirements
 
-Swift 2.1
+Swift 2.2
 
 ## Example
 
