@@ -3,6 +3,8 @@
 
 Coolie parse a JSON file to generate models (& their constructors).
 
+中文介绍：[制作一个苦力](https://github.com/nixzhu/dev-blog/blob/master/2016-06-29-coolie.md)
+
 ## Requirements
 
 Swift 2.2
