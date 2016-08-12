@@ -39,7 +39,7 @@ Swift 2.2
 Build coolie & run:
 
 ``` bash
-$ xcrun swiftc Sources/*.swift -o coolie
+$ xcrun -sdk macosx swiftc Sources/*.swift -o coolie
 $ ./coolie -i test.json --model-name User
 ```
 
