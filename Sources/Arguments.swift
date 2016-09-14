@@ -59,7 +59,7 @@ final public class Arguments {
             guard let a = _a else { break }
 
             if a.arguments_isKey {
-                if let b = _b where !b.arguments_isKey {
+                if let b = _b, !b.arguments_isKey {
                     keyValues[a] = Value.Exist(b)
 
                 } else {
@@ -84,7 +84,7 @@ final public class Arguments {
         self.keyValues = keyValues
     }
 
-    public func containsOption(option: Option) -> Bool {
+    public func containsOption(_ option: Option) -> Bool {
 
         switch option {
         case .Short(let key):
@@ -96,12 +96,12 @@ final public class Arguments {
         }
     }
 
-    public func containsOptions(options: [Option]) -> Bool {
+    public func containsOptions(_ options: [Option]) -> Bool {
 
-        return options.reduce(true, combine: { $0 && containsOption($1) })
+        return options.reduce(true, { $0 && containsOption($1) })
     }
 
-    public func valueOfOption(option: Option) -> String? {
+    public func valueOfOption(_ option: Option) -> String? {
 
         switch option {
         case .Short(let key):
@@ -111,7 +111,7 @@ final public class Arguments {
         case .Mixed(let shortKey, let longKey):
             let shortKeyValue = keyValues["-" + shortKey]?.value
             let longKeyValue = keyValues["--" + longKey]?.value
-            if let shortKeyValue = shortKeyValue, longKeyValue = longKeyValue {
+            if let shortKeyValue = shortKeyValue, let longKeyValue = longKeyValue {
                 guard shortKeyValue == longKeyValue else {
                     fatalError("Duplicate value for option: \(option)")
                 }

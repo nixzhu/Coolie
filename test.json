@@ -14,13 +14,7 @@
   "projects": [
     {
       "name": "Coolie",
-      "url": "https://github.com/nixzhu/Coolie",
-      "description": null
-    },
-    {
-      "name": "Navi",
-      "url": "https://github.com/nixzhu/Navi",
-      "description": "Focus on avatar caching."
+      "url": "https://github.com/nixzhu/Coolie"
     }
   ]
 }

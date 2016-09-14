@@ -10,27 +10,27 @@ import Foundation
 
 final public class Coolie {
 
-    private let scanner: NSScanner
+    private let scanner: Scanner
 
     public init(_ jsonString: String) {
-        scanner = NSScanner(string: jsonString)
+        scanner = Scanner(string: jsonString)
     }
 
     public enum ModelType: String {
 
-        case Struct = "struct"
-        case Class = "class"
+        case `struct`
+        case `class`
     }
 
-    public func generateModel(name name: String, type: ModelType, constructorName: Swift.String? = nil, debug: Bool = false) -> String? {
+    public func generateModel(name: String, type: ModelType, constructorName: Swift.String? = nil, debug: Bool = false) -> String? {
 
         if let value = parse() {
             var string = ""
 
             switch type {
-            case .Struct:
+            case .struct:
                 value.generateStruct(fromLevel: 0, withModelName: name, constructorName: constructorName, debug: debug, intoString: &string)
-            case .Class:
+            case .class:
                 value.generateClass(fromLevel: 0, withModelName: name, debug: debug, intoString: &string)
             }
 
@@ -43,7 +43,7 @@ final public class Coolie {
         return nil
     }
 
-    private enum Token {
+    fileprivate enum Token {
 
         case BeginObject(Swift.String)      // {
         case EndObject(Swift.String)        // }
@@ -65,7 +65,7 @@ final public class Coolie {
         case Null
     }
 
-    private enum Value {
+    fileprivate enum Value {
 
         case Bool(Swift.Bool)
         enum NumberType {
@@ -81,18 +81,18 @@ final public class Coolie {
         indirect case Array(name: Swift.String?, values: [Value])
     }
 
-    lazy var numberScanningSet: NSCharacterSet = {
-        let symbolSet = NSMutableCharacterSet.decimalDigitCharacterSet()
-        symbolSet.addCharactersInString(".-")
+    lazy var numberScanningSet: CharacterSet = {
+        var symbolSet = CharacterSet.decimalDigits
+        symbolSet.formUnion(CharacterSet(charactersIn: ".-"))
         return symbolSet
     }()
 
-    lazy var stringScanningSet: NSCharacterSet = {
-        let symbolSet = NSMutableCharacterSet.alphanumericCharacterSet()
-        symbolSet.formUnionWithCharacterSet(NSCharacterSet.punctuationCharacterSet())
-        symbolSet.formUnionWithCharacterSet(NSCharacterSet.symbolCharacterSet())
-        symbolSet.formUnionWithCharacterSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
-        symbolSet.removeCharactersInString("\"")
+    lazy var stringScanningSet: CharacterSet = {
+        var symbolSet = CharacterSet.alphanumerics
+        symbolSet.formUnion(CharacterSet.punctuationCharacters)
+        symbolSet.formUnion(CharacterSet.symbols)
+        symbolSet.formUnion(CharacterSet.whitespacesAndNewlines)
+        symbolSet.remove(charactersIn: "\"")
         return symbolSet
     }()
 
@@ -100,7 +100,7 @@ final public class Coolie {
 
         func scanBeginObject() -> Token? {
 
-            if scanner.scanString("{", intoString: nil) {
+            if scanner.scanString("{", into: nil) {
                 return .BeginObject("{")
             }
 
@@ -109,7 +109,7 @@ final public class Coolie {
 
         func scanEndObject() -> Token? {
 
-            if scanner.scanString("}", intoString: nil) {
+            if scanner.scanString("}", into: nil) {
                 return .EndObject("}")
             }
 
@@ -118,7 +118,7 @@ final public class Coolie {
 
         func scanBeginArray() -> Token? {
 
-            if scanner.scanString("[", intoString: nil) {
+            if scanner.scanString("[", into: nil) {
                 return .BeginArray("[")
             }
 
@@ -127,7 +127,7 @@ final public class Coolie {
 
         func scanEndArray() -> Token? {
 
-            if scanner.scanString("]", intoString: nil) {
+            if scanner.scanString("]", into: nil) {
                 return .EndArray("]")
             }
 
@@ -136,7 +136,7 @@ final public class Coolie {
 
         func scanColon() -> Token? {
 
-            if scanner.scanString(":", intoString: nil) {
+            if scanner.scanString(":", into: nil) {
                 return .Colon(":")
             }
 
@@ -145,7 +145,7 @@ final public class Coolie {
 
         func scanComma() -> Token? {
 
-            if scanner.scanString(",", intoString: nil) {
+            if scanner.scanString(",", into: nil) {
                 return .Comma(",")
             }
 
@@ -154,11 +154,11 @@ final public class Coolie {
 
         func scanBool() -> Token? {
 
-            if scanner.scanString("true", intoString: nil) {
+            if scanner.scanString("true", into: nil) {
                 return .Bool(true)
             }
 
-            if scanner.scanString("false", intoString: nil) {
+            if scanner.scanString("false", into: nil) {
                 return .Bool(false)
             }
 
@@ -169,7 +169,7 @@ final public class Coolie {
 
             var string: NSString?
 
-            if scanner.scanCharactersFromSet(numberScanningSet, intoString: &string) {
+            if scanner.scanCharacters(from: numberScanningSet, into: &string) {
 
                 if let string = string as? String {
 
@@ -189,13 +189,13 @@ final public class Coolie {
 
             var string: NSString?
 
-            if scanner.scanString("\"\"", intoString: nil) {
+            if scanner.scanString("\"\"", into: nil) {
                 return .String("")
             }
 
-            if scanner.scanString("\"", intoString: nil) &&
-                scanner.scanCharactersFromSet(stringScanningSet, intoString: &string) &&
-                scanner.scanString("\"", intoString: nil) {
+            if scanner.scanString("\"", into: nil) &&
+                scanner.scanCharacters(from: stringScanningSet, into: &string) &&
+                scanner.scanString("\"", into: nil) {
 
                 if let string = string as? String {
                     return .String(string)
@@ -207,7 +207,7 @@ final public class Coolie {
 
         func scanNull() -> Token? {
 
-            if scanner.scanString("null", intoString: nil) {
+            if scanner.scanString("null", into: nil) {
                 return .Null
             }
 
@@ -216,7 +216,7 @@ final public class Coolie {
 
         var tokens = [Token]()
 
-        while !scanner.atEnd {
+        while !scanner.isAtEnd {
 
             let previousScanLocation = scanner.scanLocation
 
@@ -297,7 +297,7 @@ final public class Coolie {
                 if nameIndex >= 0 {
                     if let nameToken = tokens[coolie_safe: nameIndex] {
                         if case .String(let name) = nameToken {
-                            arrayName = name.capitalizedString
+                            arrayName = name.capitalized
                         }
                     }
                 }
@@ -326,7 +326,7 @@ final public class Coolie {
             }
         }
 
-        func parseArray(name name: String? = nil) -> Value? {
+        func parseArray(name: String? = nil) -> Value? {
 
             guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseArray")
@@ -359,7 +359,7 @@ final public class Coolie {
                                 break
                             }
 
-                            guard let nextToken = tokens[coolie_safe: next] where nextToken.isNotEndArray else {
+                            guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndArray else {
                                 print("Invalid JSON, comma at end of array")
                                 break
                             }
@@ -386,7 +386,7 @@ final public class Coolie {
 
             } else {
                 while true {
-                    guard let key = parseString(), _ = parseColon(), value = parseValue() else {
+                    guard let key = parseString(), let _ = parseColon(), let value = parseValue() else {
                         print("Expect key : value")
                         break
                     }
@@ -407,7 +407,7 @@ final public class Coolie {
                                 break
                             }
 
-                            guard let nextToken = tokens[coolie_safe: next] where nextToken.isNotEndObject else {
+                            guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndObject else {
                                 print("Invalid JSON, comma at end of object")
                                 break
                             }
@@ -620,7 +620,7 @@ private extension Coolie.Token {
 
 private extension Coolie.Value {
 
-    func unionValues(values: [Coolie.Value]) -> Coolie.Value? {
+    func unionValues(_ values: [Coolie.Value]) -> Coolie.Value? {
 
         guard values.count > 1 else {
             return values.first
@@ -636,7 +636,7 @@ private extension Coolie.Value {
                 let next = values[i]
                 if case .Dictionary(let nextInfo) = next {
                     for key in keys {
-                        if let value = nextInfo[key] where !value.isNull {
+                        if let value = nextInfo[key], !value.isNull {
                             info[key] = value
                         }
                     }
@@ -652,9 +652,9 @@ private extension Coolie.Value {
 
 private extension Coolie.Value {
 
-    func generateStruct(fromLevel level: Int, withModelName modelName: Swift.String? = nil, constructorName: Swift.String? = nil, debug: Swift.Bool, inout intoString string: Swift.String) {
+    func generateStruct(fromLevel level: Int, withModelName modelName: Swift.String? = nil, constructorName: Swift.String? = nil, debug: Swift.Bool, intoString string: inout Swift.String) {
 
-        func indentLevel(level: Int) {
+        func indentLevel(_ level: Int) {
             for _ in 0..<level {
                 string += "\t"
             }
@@ -671,19 +671,19 @@ private extension Coolie.Value {
             string += "struct \(modelName ?? "Model") {\n"
 
             // properties
-            for key in info.keys.sort() {
+            for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
-                        value.generateStruct(fromLevel: level + 1, withModelName: key.capitalizedString, constructorName: constructorName, debug: debug, intoString: &string)
+                        value.generateStruct(fromLevel: level + 1, withModelName: key.capitalized, constructorName: constructorName, debug: debug, intoString: &string)
                         indentLevel(level + 1)
                         if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                             } else {
-                                string += "let \(key.coolie_lowerCamelCase): [\(key.capitalizedString.coolie_dropLastCharacter)]\n"
+                                string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
                             }
                         } else {
-                            string += "let \(key.coolie_lowerCamelCase): \(key.capitalizedString)\n"
+                            string += "let \(key.coolie_lowerCamelCase): \(key.capitalized)\n"
                         }
                     } else {
                         indentLevel(level + 1)
@@ -696,11 +696,11 @@ private extension Coolie.Value {
             // generate method
             indentLevel(level + 1)
             if let constructorName = constructorName {
-                string += "static func \(constructorName)(info: [String: AnyObject]) -> \(modelName ?? "Model")? {\n"
+                string += "static func \(constructorName)(_ info: [String: AnyObject]) -> \(modelName ?? "Model")? {\n"
             } else {
                 string += "init?(_ info: [String: AnyObject]) {\n"
             }
-            for key in info.keys.sort() {
+            for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
@@ -709,13 +709,13 @@ private extension Coolie.Value {
                             string += debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
                             if let constructorName = constructorName {
-                                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString).\(constructorName)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             } else {
-                                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             }
                             string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
                         } else if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
                                 if unionValue.isNull {
                                     string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
@@ -729,9 +729,9 @@ private extension Coolie.Value {
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
                                 if let constructorName = constructorName {
-                                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter).\(constructorName)($0) }).flatMap({ $0 })\n"
+                                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)($0) }).flatMap({ $0 })\n"
                                 } else {
-                                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
+                                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
                                 }
                             }
                         }
@@ -751,14 +751,14 @@ private extension Coolie.Value {
                 indentLevel(level + 2)
                 string += "return \(modelName ?? "Model")("
                 let lastIndex = info.keys.count - 1
-                for (index, key) in info.keys.sort().enumerate() {
+                for (index, key) in info.keys.sorted().enumerated() {
                     let suffix = (index == lastIndex) ? ")" : ", "
                     string += "\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix
                 }
                 string += "\n"
 
             } else {
-                for key in info.keys.sort() {
+                for key in info.keys.sorted() {
                     indentLevel(level + 2)
                     let property = key.coolie_lowerCamelCase
                     string += "self.\(property) = \(property)\n"
@@ -783,9 +783,9 @@ private extension Coolie.Value {
 
 private extension Coolie.Value {
 
-    func generateClass(fromLevel level: Int, withModelName modelName: Swift.String? = nil, debug: Swift.Bool, inout intoString string: Swift.String) {
+    func generateClass(fromLevel level: Int, withModelName modelName: Swift.String? = nil, debug: Swift.Bool, intoString string: inout Swift.String) {
 
-        func indentLevel(level: Int) {
+        func indentLevel(_ level: Int) {
             for _ in 0..<level {
                 string += "\t"
             }
@@ -802,19 +802,19 @@ private extension Coolie.Value {
             string += "class \(modelName ?? "Model") {\n"
 
             // properties
-            for key in info.keys.sort() {
+            for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
-                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalizedString, debug: debug, intoString: &string)
+                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalized, debug: debug, intoString: &string)
                         indentLevel(level + 1)
                         if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                             } else {
-                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalizedString.coolie_dropLastCharacter)]\n"
+                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
                             }
                         } else {
-                            string += "var \(key.coolie_lowerCamelCase): \(key.capitalizedString)\n"
+                            string += "var \(key.coolie_lowerCamelCase): \(key.capitalized)\n"
                         }
                     } else {
                         indentLevel(level + 1)
@@ -827,7 +827,7 @@ private extension Coolie.Value {
             // generate method
             indentLevel(level + 1)
             string += "init?(_ info: [String: AnyObject]) {\n"
-            for key in info.keys.sort() {
+            for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
@@ -835,10 +835,10 @@ private extension Coolie.Value {
                             string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { "
                             string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
-                            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalizedString)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
                         } else if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values) where !unionValue.isDictionaryOrArray {
+                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
                                 if unionValue.isNull {
                                     string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
@@ -851,7 +851,7 @@ private extension Coolie.Value {
                                 string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { "
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalizedString.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
                             }
                         }
                     } else {
@@ -866,7 +866,7 @@ private extension Coolie.Value {
                 }
             }
 
-            for key in info.keys.sort() {
+            for key in info.keys.sorted() {
                 indentLevel(level + 2)
                 let property = key.coolie_lowerCamelCase
                 string += "self.\(property) = \(property)\n"
@@ -901,16 +901,16 @@ private extension String {
 
     var coolie_lowerCamelCase: String {
 
-        let symbolSet = NSMutableCharacterSet.alphanumericCharacterSet()
-        symbolSet.addCharactersInString("_")
+        var symbolSet = CharacterSet.alphanumerics
+        symbolSet.formUnion(CharacterSet(charactersIn: "_"))
         symbolSet.invert()
 
-        let validString = self.componentsSeparatedByCharactersInSet(symbolSet).joinWithSeparator("_")
-        let parts = validString.componentsSeparatedByString("_")
+        let validString = self.components(separatedBy: symbolSet).joined(separator: "_")
+        let parts = validString.components(separatedBy: "_")
 
-        return parts.enumerate().map({ index, part in
-            return index == 0 ? part : part.capitalizedString
-        }).joinWithSeparator("")
+        return parts.enumerated().map({ index, part in
+            return index == 0 ? part : part.capitalized
+        }).joined(separator: "")
     }
 }
 
