@@ -22,16 +22,16 @@ final public class Coolie {
         case `class`
     }
 
-    public func generateModel(name: String, type: ModelType, constructorName: Swift.String? = nil, debug: Bool = false) -> String? {
+    public func generateModel(name: String, type: ModelType, constructorName: String? = nil, debug: Bool = false) -> String? {
 
         if let value = parse() {
             var string = ""
 
             switch type {
             case .struct:
-                value.generateStruct(fromLevel: 0, withModelName: name, constructorName: constructorName, debug: debug, intoString: &string)
+                value.generateStruct(fromLevel: 0, withModelName: name, constructorName: constructorName, debug: debug, into: &string)
             case .class:
-                value.generateClass(fromLevel: 0, withModelName: name, debug: debug, intoString: &string)
+                value.generateClass(fromLevel: 0, withModelName: name, debug: debug, into: &string)
             }
 
             return string
@@ -45,40 +45,40 @@ final public class Coolie {
 
     fileprivate enum Token {
 
-        case BeginObject(Swift.String)      // {
-        case EndObject(Swift.String)        // }
+        case beginObject(String)    // {
+        case endObject(String)      // }
 
-        case BeginArray(Swift.String)       // [
-        case EndArray(Swift.String)         // ]
+        case beginArray(String)     // [
+        case endArray(String)       // ]
 
-        case Colon(Swift.String)            // :
-        case Comma(Swift.String)            // ,
+        case colon(String)          // :
+        case comma(String)          // ,
 
-        case Bool(Swift.Bool)               // true or false
+        case bool(Bool)             // true or false
         enum NumberType {
-            case Int(Swift.Int)
-            case Double(Swift.Double)
+            case int(Int)
+            case double(Double)
         }
-        case Number(NumberType)             // 42, 99.99
-        case String(Swift.String)           // "nix", ...
+        case number(NumberType)     // 42, 99.99
+        case string(String)         // "nix", ...
 
-        case Null
+        case null                   // null
     }
 
     fileprivate enum Value {
 
-        case Bool(Swift.Bool)
+        case bool(Bool)
         enum NumberType {
-            case Int(Swift.Int)
-            case Double(Swift.Double)
+            case int(Int)
+            case double(Double)
         }
-        case Number(NumberType)
-        case String(Swift.String)
+        case number(NumberType)
+        case string(String)
 
-        case Null
+        case null
 
-        indirect case Dictionary([Swift.String: Value])
-        indirect case Array(name: Swift.String?, values: [Value])
+        indirect case dictionary([String: Value])
+        indirect case array(name: String?, values: [Value])
     }
 
     lazy var numberScanningSet: CharacterSet = {
@@ -101,7 +101,7 @@ final public class Coolie {
         func scanBeginObject() -> Token? {
 
             if scanner.scanString("{", into: nil) {
-                return .BeginObject("{")
+                return .beginObject("{")
             }
 
             return nil
@@ -110,7 +110,7 @@ final public class Coolie {
         func scanEndObject() -> Token? {
 
             if scanner.scanString("}", into: nil) {
-                return .EndObject("}")
+                return .endObject("}")
             }
 
             return nil
@@ -119,7 +119,7 @@ final public class Coolie {
         func scanBeginArray() -> Token? {
 
             if scanner.scanString("[", into: nil) {
-                return .BeginArray("[")
+                return .beginArray("[")
             }
 
             return nil
@@ -128,7 +128,7 @@ final public class Coolie {
         func scanEndArray() -> Token? {
 
             if scanner.scanString("]", into: nil) {
-                return .EndArray("]")
+                return .endArray("]")
             }
 
             return nil
@@ -137,7 +137,7 @@ final public class Coolie {
         func scanColon() -> Token? {
 
             if scanner.scanString(":", into: nil) {
-                return .Colon(":")
+                return .colon(":")
             }
 
             return nil
@@ -146,7 +146,7 @@ final public class Coolie {
         func scanComma() -> Token? {
 
             if scanner.scanString(",", into: nil) {
-                return .Comma(",")
+                return .comma(",")
             }
 
             return nil
@@ -155,11 +155,11 @@ final public class Coolie {
         func scanBool() -> Token? {
 
             if scanner.scanString("true", into: nil) {
-                return .Bool(true)
+                return .bool(true)
             }
 
             if scanner.scanString("false", into: nil) {
-                return .Bool(false)
+                return .bool(false)
             }
 
             return nil
@@ -174,10 +174,10 @@ final public class Coolie {
                 if let string = string as? String {
 
                     if let number = Int(string) {
-                        return .Number(.Int(number))
+                        return .number(.int(number))
 
                     } else if let number = Double(string) {
-                        return .Number(.Double(number))
+                        return .number(.double(number))
                     }
                 }
             }
@@ -190,7 +190,7 @@ final public class Coolie {
             var string: NSString?
 
             if scanner.scanString("\"\"", into: nil) {
-                return .String("")
+                return .string("")
             }
 
             if scanner.scanString("\"", into: nil) &&
@@ -198,7 +198,7 @@ final public class Coolie {
                 scanner.scanString("\"", into: nil) {
 
                 if let string = string as? String {
-                    return .String(string)
+                    return .string(string)
                 }
             }
 
@@ -208,7 +208,7 @@ final public class Coolie {
         func scanNull() -> Token? {
 
             if scanner.scanString("null", into: nil) {
-                return .Null
+                return .null
             }
 
             return nil
@@ -290,13 +290,13 @@ final public class Coolie {
 
             switch token {
 
-            case .BeginArray:
+            case .beginArray:
 
                 var arrayName: String?
                 let nameIndex = next - 2
                 if nameIndex >= 0 {
                     if let nameToken = tokens[coolie_safe: nameIndex] {
-                        if case .String(let name) = nameToken {
+                        if case .string(let name) = nameToken {
                             arrayName = name.capitalized
                         }
                     }
@@ -305,20 +305,20 @@ final public class Coolie {
                 next += 1
                 return parseArray(name: arrayName)
 
-            case .BeginObject:
+            case .beginObject:
                 next += 1
                 return parseObject()
 
-            case .Bool:
+            case .bool:
                 return parseBool()
 
-            case .Number:
+            case .number:
                 return parseNumber()
 
-            case .String:
+            case .string:
                 return parseString()
 
-            case .Null:
+            case .null:
                 return parseNull()
 
             default:
@@ -335,9 +335,9 @@ final public class Coolie {
 
             var array = [Value]()
 
-            if case .EndArray = token {
+            if case .endArray = token {
                 next += 1
-                return .Array(name: name, values: array)
+                return .array(name: name, values: array)
 
             } else {
                 while true {
@@ -349,9 +349,9 @@ final public class Coolie {
 
                     if let token = tokens[coolie_safe: next] {
 
-                        if case .EndArray = token {
+                        if case .endArray = token {
                             next += 1
-                            return .Array(name: name, values: array)
+                            return .array(name: name, values: array)
 
                         } else {
                             guard let _ = parseComma() else {
@@ -380,9 +380,9 @@ final public class Coolie {
 
             var dictionary = [String: Value]()
 
-            if case .EndObject = token {
+            if case .endObject = token {
                 next += 1
-                return .Dictionary(dictionary)
+                return .dictionary(dictionary)
 
             } else {
                 while true {
@@ -391,15 +391,15 @@ final public class Coolie {
                         break
                     }
 
-                    if case .String(let key) = key {
+                    if case .string(let key) = key {
                         dictionary[key] = value
                     }
 
                     if let token = tokens[coolie_safe: next] {
 
-                        if case .EndObject = token {
+                        if case .endObject = token {
                             next += 1
-                            return .Dictionary(dictionary)
+                            return .dictionary(dictionary)
 
                         } else {
                             guard let _ = parseComma() else {
@@ -430,8 +430,8 @@ final public class Coolie {
                 return nil
             }
 
-            if case .Colon(let string) = token {
-                return .String(string)
+            if case .colon(let string) = token {
+                return .string(string)
             }
 
             return nil
@@ -448,8 +448,8 @@ final public class Coolie {
                 return nil
             }
 
-            if case .Comma(let string) = token {
-                return .String(string)
+            if case .comma(let string) = token {
+                return .string(string)
             }
 
             return nil
@@ -466,8 +466,8 @@ final public class Coolie {
                 return nil
             }
 
-            if case .Bool(let bool) = token {
-                return .Bool(bool)
+            if case .bool(let bool) = token {
+                return .bool(bool)
             }
 
             return nil
@@ -484,12 +484,12 @@ final public class Coolie {
                 return nil
             }
 
-            if case .Number(let number) = token {
+            if case .number(let number) = token {
                 switch number {
-                case .Int(let int):
-                    return .Number(.Int(int))
-                case .Double(let double):
-                    return .Number(.Double(double))
+                case .int(let int):
+                    return .number(.int(int))
+                case .double(let double):
+                    return .number(.double(double))
                 }
             }
 
@@ -507,8 +507,8 @@ final public class Coolie {
                 return nil
             }
 
-            if case .String(let string) = token {
-                return .String(string)
+            if case .string(let string) = token {
+                return .string(string)
             }
 
             return nil
@@ -525,8 +525,8 @@ final public class Coolie {
                 return nil
             }
 
-            if case .Null = token {
-                return .Null
+            if case .null = token {
+                return .null
             }
 
             return nil
@@ -538,58 +538,58 @@ final public class Coolie {
 
 private extension Coolie.Value {
 
-    var type: Swift.String {
+    var type: String {
         switch self {
-        case .Bool:
+        case .bool:
             return "Bool"
-        case .Number(let number):
+        case .number(let number):
             switch number {
-            case .Int:
+            case .int:
                 return "Int"
-            case .Double:
+            case .double:
                 return "Double"
             }
-        case .String:
+        case .string:
             return "String"
-        case .Null:
+        case .null:
             return "UnknownType?"
         default:
             fatalError("Unknown type")
         }
     }
 
-    var isDictionaryOrArray: Swift.Bool {
+    var isDictionaryOrArray: Bool {
         switch self {
-        case .Dictionary:
+        case .dictionary:
             return true
-        case .Array:
-            return true
-        default:
-            return false
-        }
-    }
-
-    var isDictionary: Swift.Bool {
-        switch self {
-        case .Dictionary:
+        case .array:
             return true
         default:
             return false
         }
     }
 
-    var isArray: Swift.Bool {
+    var isDictionary: Bool {
         switch self {
-        case .Array:
+        case .dictionary:
             return true
         default:
             return false
         }
     }
 
-    var isNull: Swift.Bool {
+    var isArray: Bool {
         switch self {
-        case .Null:
+        case .array:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var isNull: Bool {
+        switch self {
+        case .null:
             return true
         default:
             return false
@@ -599,18 +599,18 @@ private extension Coolie.Value {
 
 private extension Coolie.Token {
 
-    var isNotEndObject: Swift.Bool {
+    var isNotEndObject: Bool {
         switch self {
-        case .EndObject:
+        case .endObject:
             return false
         default:
             return true
         }
     }
 
-    var isNotEndArray: Swift.Bool {
+    var isNotEndArray: Bool {
         switch self {
-        case .EndArray:
+        case .endArray:
             return false
         default:
             return true
@@ -626,15 +626,15 @@ private extension Coolie.Value {
             return values.first
         }
 
-        if let first = values.first, case .Dictionary(let firstInfo) = first {
+        if let first = values.first, case .dictionary(let firstInfo) = first {
 
-            var info: [Swift.String: Coolie.Value] = firstInfo
+            var info: [String: Coolie.Value] = firstInfo
 
             let keys = firstInfo.keys
 
             for i in 1..<values.count {
                 let next = values[i]
-                if case .Dictionary(let nextInfo) = next {
+                if case .dictionary(let nextInfo) = next {
                     for key in keys {
                         if let value = nextInfo[key], !value.isNull {
                             info[key] = value
@@ -643,7 +643,7 @@ private extension Coolie.Value {
                 }
             }
 
-            return .Dictionary(info)
+            return .dictionary(info)
         }
 
         return values.first
@@ -652,7 +652,7 @@ private extension Coolie.Value {
 
 private extension Coolie.Value {
 
-    func generateStruct(fromLevel level: Int, withModelName modelName: Swift.String? = nil, constructorName: Swift.String? = nil, debug: Swift.Bool, intoString string: inout Swift.String) {
+    func generateStruct(fromLevel level: Int, withModelName modelName: String? = nil, constructorName: String? = nil, debug: Bool, into string: inout String) {
 
         func indentLevel(_ level: Int) {
             for _ in 0..<level {
@@ -662,10 +662,10 @@ private extension Coolie.Value {
 
         switch self {
 
-        case .Bool, .Number, .String, .Null:
+        case .bool, .number, .string, .null:
             string += "\(type)\n"
 
-        case .Dictionary(let info):
+        case .dictionary(let info):
             // struct name
             indentLevel(level)
             string += "struct \(modelName ?? "Model") {\n"
@@ -674,10 +674,10 @@ private extension Coolie.Value {
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
-                        value.generateStruct(fromLevel: level + 1, withModelName: key.capitalized, constructorName: constructorName, debug: debug, intoString: &string)
+                        value.generateStruct(fromLevel: level + 1, withModelName: key.capitalized, constructorName: constructorName, debug: debug, into: &string)
                         indentLevel(level + 1)
                         if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
+                            if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                             } else {
                                 string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
@@ -688,7 +688,7 @@ private extension Coolie.Value {
                     } else {
                         indentLevel(level + 1)
                         string += "let \(key.coolie_lowerCamelCase): "
-                        value.generateStruct(fromLevel: level, constructorName: constructorName, debug: debug, intoString: &string)
+                        value.generateStruct(fromLevel: level, constructorName: constructorName, debug: debug, into: &string)
                     }
                 }
             }
@@ -715,7 +715,7 @@ private extension Coolie.Value {
                             }
                             string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
                         } else if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
+                            if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
                                 if unionValue.isNull {
                                     string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
@@ -771,10 +771,10 @@ private extension Coolie.Value {
             indentLevel(level)
             string += "}\n"
 
-        case .Array(let name, let values):
+        case .array(let name, let values):
             if let unionValue = unionValues(values) {
                 if unionValue.isDictionaryOrArray {
-                    unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, constructorName: constructorName, debug: debug, intoString: &string)
+                    unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, constructorName: constructorName, debug: debug, into: &string)
                 }
             }
         }
@@ -783,7 +783,7 @@ private extension Coolie.Value {
 
 private extension Coolie.Value {
 
-    func generateClass(fromLevel level: Int, withModelName modelName: Swift.String? = nil, debug: Swift.Bool, intoString string: inout Swift.String) {
+    func generateClass(fromLevel level: Int, withModelName modelName: String? = nil, debug: Bool, into string: inout String) {
 
         func indentLevel(_ level: Int) {
             for _ in 0..<level {
@@ -793,10 +793,10 @@ private extension Coolie.Value {
 
         switch self {
 
-        case .Bool, .Number, .String, .Null:
+        case .bool, .number, .string, .null:
             string += "\(type)\n"
 
-        case .Dictionary(let info):
+        case .dictionary(let info):
             // struct name
             indentLevel(level)
             string += "class \(modelName ?? "Model") {\n"
@@ -805,10 +805,10 @@ private extension Coolie.Value {
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
-                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalized, debug: debug, intoString: &string)
+                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalized, debug: debug, into: &string)
                         indentLevel(level + 1)
                         if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
+                            if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                             } else {
                                 string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
@@ -819,7 +819,7 @@ private extension Coolie.Value {
                     } else {
                         indentLevel(level + 1)
                         string += "var \(key.coolie_lowerCamelCase): "
-                        value.generateClass(fromLevel: level, debug: debug, intoString: &string)
+                        value.generateClass(fromLevel: level, debug: debug, into: &string)
                     }
                 }
             }
@@ -838,7 +838,7 @@ private extension Coolie.Value {
                             string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
                         } else if value.isArray {
-                            if case .Array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
+                            if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
                                 if unionValue.isNull {
                                     string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
@@ -878,10 +878,10 @@ private extension Coolie.Value {
             indentLevel(level)
             string += "}\n"
 
-        case .Array(let name, let values):
+        case .array(let name, let values):
             if let unionValue = unionValues(values) {
                 if unionValue.isDictionaryOrArray {
-                    unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, debug: debug, intoString: &string)
+                    unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, debug: debug, into: &string)
                 }
             }
         }
