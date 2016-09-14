@@ -7,7 +7,7 @@ Coolie parse a JSON file to generate models (& their constructors).
 
 ## Requirements
 
-Swift 2.2
+Swift 3.0
 
 ## Example
 
@@ -39,8 +39,8 @@ Swift 2.2
 Build coolie & run:
 
 ``` bash
-$ xcrun -sdk macosx swiftc Sources/*.swift -o coolie
-$ ./coolie -i test.json --model-name User
+$ swift build
+$ ./.build/debug/coolie -i test.json --model-name User
 ```
 
 It will generate:
@@ -102,7 +102,7 @@ Now you can modify the models (the name of properties or their type) if you need
 You can specify constructor name like following command:
 
 ``` bash
-$ ./coolie -i test.json --model-name User --constructor-name fromJSONDictionary
+$ ./.build/debug/coolie -i test.json --model-name User --constructor-name fromJSONDictionary
 ```
 
 It will generate:
@@ -152,7 +152,7 @@ struct User {
 If you need class model, use the following command:
 
 ``` bash
-$ ./coolie -i test.json --model-name User --model-type class
+$ ./.build/debug/coolie -i test.json --model-name User --model-type class
 ```
 
 ## Contact
