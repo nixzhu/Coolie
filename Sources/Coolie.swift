@@ -696,16 +696,16 @@ private extension Coolie.Value {
             // generate method
             indentLevel(level + 1)
             if let constructorName = constructorName {
-                string += "static func \(constructorName)(_ info: [String: AnyObject]) -> \(modelName ?? "Model")? {\n"
+                string += "static func \(constructorName)(_ info: [String: Any]) -> \(modelName ?? "Model")? {\n"
             } else {
-                string += "init?(_ info: [String: AnyObject]) {\n"
+                string += "init?(_ info: [String: Any]) {\n"
             }
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
                             indentLevel(level + 2)
-                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { "
+                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: Any] else { "
                             string += debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
                             if let constructorName = constructorName {
@@ -725,7 +725,7 @@ private extension Coolie.Value {
                                 }
                             } else {
                                 indentLevel(level + 2)
-                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { "
+                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: Any]] else { "
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
                                 if let constructorName = constructorName {
@@ -826,13 +826,13 @@ private extension Coolie.Value {
 
             // generate method
             indentLevel(level + 1)
-            string += "init?(_ info: [String: AnyObject]) {\n"
+            string += "init?(_ info: [String: Any]) {\n"
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
                             indentLevel(level + 2)
-                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: AnyObject] else { "
+                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: Any] else { "
                             string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
                             string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
@@ -848,7 +848,7 @@ private extension Coolie.Value {
                                 }
                             } else {
                                 indentLevel(level + 2)
-                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: AnyObject]] else { "
+                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: Any]] else { "
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
                                 string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
