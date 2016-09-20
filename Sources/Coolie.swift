@@ -22,16 +22,16 @@ final public class Coolie {
         case `class`
     }
 
-    public func generateModel(name: String, type: ModelType, constructorName: String? = nil, debug: Bool = false) -> String? {
+    public func generateModel(name: String, type: ModelType, constructorName: String? = nil, jsonDictionaryName: String? = nil, debug: Bool = false) -> String? {
 
         if let value = parse() {
             var string = ""
 
             switch type {
             case .struct:
-                value.generateStruct(fromLevel: 0, withModelName: name, constructorName: constructorName, debug: debug, into: &string)
+                value.generateStruct(fromLevel: 0, withModelName: name, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
             case .class:
-                value.generateClass(fromLevel: 0, withModelName: name, debug: debug, into: &string)
+                value.generateClass(fromLevel: 0, withModelName: name, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
             }
 
             return string
@@ -652,13 +652,15 @@ private extension Coolie.Value {
 
 private extension Coolie.Value {
 
-    func generateStruct(fromLevel level: Int, withModelName modelName: String? = nil, constructorName: String? = nil, debug: Bool, into string: inout String) {
+    func generateStruct(fromLevel level: Int, withModelName modelName: String? = nil, constructorName: String? = nil, jsonDictionaryName: String? = nil, debug: Bool, into string: inout String) {
 
         func indentLevel(_ level: Int) {
             for _ in 0..<level {
                 string += "\t"
             }
         }
+
+        let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
 
         switch self {
 
@@ -674,7 +676,7 @@ private extension Coolie.Value {
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
-                        value.generateStruct(fromLevel: level + 1, withModelName: key.capitalized, constructorName: constructorName, debug: debug, into: &string)
+                        value.generateStruct(fromLevel: level + 1, withModelName: key.capitalized, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                         indentLevel(level + 1)
                         if value.isArray {
                             if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
@@ -688,7 +690,7 @@ private extension Coolie.Value {
                     } else {
                         indentLevel(level + 1)
                         string += "let \(key.coolie_lowerCamelCase): "
-                        value.generateStruct(fromLevel: level, constructorName: constructorName, debug: debug, into: &string)
+                        value.generateStruct(fromLevel: level, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                     }
                 }
             }
@@ -696,16 +698,16 @@ private extension Coolie.Value {
             // generate method
             indentLevel(level + 1)
             if let constructorName = constructorName {
-                string += "static func \(constructorName)(_ info: [String: Any]) -> \(modelName ?? "Model")? {\n"
+                string += "static func \(constructorName)(_ info: \(jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
             } else {
-                string += "init?(_ info: [String: Any]) {\n"
+                string += "init?(_ info: \(jsonDictionaryName)) {\n"
             }
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
                             indentLevel(level + 2)
-                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: Any] else { "
+                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
                             string += debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
                             if let constructorName = constructorName {
@@ -725,7 +727,7 @@ private extension Coolie.Value {
                                 }
                             } else {
                                 indentLevel(level + 2)
-                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: Any]] else { "
+                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
                                 if let constructorName = constructorName {
@@ -774,7 +776,7 @@ private extension Coolie.Value {
         case .array(let name, let values):
             if let unionValue = unionValues(values) {
                 if unionValue.isDictionaryOrArray {
-                    unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, constructorName: constructorName, debug: debug, into: &string)
+                    unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                 }
             }
         }
@@ -783,13 +785,15 @@ private extension Coolie.Value {
 
 private extension Coolie.Value {
 
-    func generateClass(fromLevel level: Int, withModelName modelName: String? = nil, debug: Bool, into string: inout String) {
+    func generateClass(fromLevel level: Int, withModelName modelName: String? = nil, jsonDictionaryName: String? = nil, debug: Bool, into string: inout String) {
 
         func indentLevel(_ level: Int) {
             for _ in 0..<level {
                 string += "\t"
             }
         }
+
+        let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
 
         switch self {
 
@@ -805,7 +809,7 @@ private extension Coolie.Value {
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
-                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalized, debug: debug, into: &string)
+                        value.generateClass(fromLevel: level + 1, withModelName: key.capitalized, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                         indentLevel(level + 1)
                         if value.isArray {
                             if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
@@ -819,20 +823,20 @@ private extension Coolie.Value {
                     } else {
                         indentLevel(level + 1)
                         string += "var \(key.coolie_lowerCamelCase): "
-                        value.generateClass(fromLevel: level, debug: debug, into: &string)
+                        value.generateClass(fromLevel: level, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                     }
                 }
             }
 
             // generate method
             indentLevel(level + 1)
-            string += "init?(_ info: [String: Any]) {\n"
+            string += "init?(_ info: \(jsonDictionaryName)) {\n"
             for key in info.keys.sorted() {
                 if let value = info[key] {
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
                             indentLevel(level + 2)
-                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? [String: Any] else { "
+                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
                             string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
                             string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
@@ -848,7 +852,7 @@ private extension Coolie.Value {
                                 }
                             } else {
                                 indentLevel(level + 2)
-                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [[String: Any]] else { "
+                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
                                 string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)($0) }).flatMap({ $0 })\n"
@@ -881,7 +885,7 @@ private extension Coolie.Value {
         case .array(let name, let values):
             if let unionValue = unionValues(values) {
                 if unionValue.isDictionaryOrArray {
-                    unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, debug: debug, into: &string)
+                    unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                 }
             }
         }

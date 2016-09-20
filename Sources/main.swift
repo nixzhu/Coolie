@@ -20,17 +20,19 @@ func main(_ arguments: [String]) {
         return
     }
 
-    guard FileManager.default.fileExists(atPath: inputFilePath) else {
+    let fileManager = FileManager.default
+
+    guard fileManager.fileExists(atPath: inputFilePath) else {
         print("File NOT found at \(inputFilePath)")
         return
     }
 
-    guard FileManager.default.isReadableFile(atPath: inputFilePath) else {
+    guard fileManager.isReadableFile(atPath: inputFilePath) else {
         print("No permission to read file at \(inputFilePath)")
         return
     }
 
-    guard let data = FileManager.default.contents(atPath: inputFilePath) else {
+    guard let data = fileManager.contents(atPath: inputFilePath) else {
         print("File is empty!")
         return
     }
@@ -47,19 +49,22 @@ func main(_ arguments: [String]) {
     let constructorNameOption = Arguments.Option.Long(key: "constructor-name")
     let constructorName = arguments.valueOfOption(constructorNameOption)
 
+    let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
+    let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption)
+
     let debugOption = Arguments.Option.Long(key: "debug")
     let debug = arguments.containsOption(debugOption)
 
     if let modelType = arguments.valueOfOption(modelTypeOption)?.lowercased() {
         if let type = Coolie.ModelType(rawValue: modelType.lowercased()) {
-            if let model = coolie.generateModel(name: modelName, type: type, constructorName: constructorName, debug: debug) {
+            if let model = coolie.generateModel(name: modelName, type: type, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug) {
                 print(model)
                 return
             }
         }
 
     } else {
-        if let model = coolie.generateModel(name: modelName, type: Coolie.ModelType.struct, constructorName: constructorName, debug: debug) {
+        if let model = coolie.generateModel(name: modelName, type: Coolie.ModelType.struct, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug) {
             print(model)
             return
         }
