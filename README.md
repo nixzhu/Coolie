@@ -56,7 +56,7 @@ struct User {
 		let isDogLover: Bool
 		let motto: String
 		let skills: [String]
-		init?(_ info: [String: AnyObject]) {
+		init?(_ info: [String: Any]) {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
 			let gender = info["gender"] as? UnknownType
@@ -76,7 +76,7 @@ struct User {
 	struct Project {
 		let name: String
 		let url: String
-		init?(_ info: [String: AnyObject]) {
+		init?(_ info: [String: Any]) {
 			guard let name = info["name"] as? String else { return nil }
 			guard let url = info["url"] as? String else { return nil }
 			self.name = name
@@ -84,11 +84,11 @@ struct User {
 		}
 	}
 	let projects: [Project]
-	init?(_ info: [String: AnyObject]) {
-		guard let detailJSONDictionary = info["detail"] as? [String: AnyObject] else { return nil }
+	init?(_ info: [String: Any]) {
+		guard let detailJSONDictionary = info["detail"] as? [String: Any] else { return nil }
 		guard let detail = Detail(detailJSONDictionary) else { return nil }
 		guard let name = info["name"] as? String else { return nil }
-		guard let projectsJSONArray = info["projects"] as? [[String: AnyObject]] else { return nil }
+		guard let projectsJSONArray = info["projects"] as? [[String: Any]] else { return nil }
 		let projects = projectsJSONArray.map({ Project($0) }).flatMap({ $0 })
 		self.detail = detail
 		self.name = name
@@ -101,10 +101,10 @@ Pretty cool, ah?
 
 Now you can modify the models (the name of properties or their type) if you need.
 
-You can specify constructor name like following command:
+You can specify constructor name or json dictionary name like following command:
 
 ``` bash
-$ ./.build/debug/coolie -i test.json --model-name User --constructor-name fromJSONDictionary
+$ ./.build/debug/coolie -i test.json --model-name User --constructor-name fromJSONDictionary --json-dictionary-name JSONDictionary
 ```
 
 It will generate:
@@ -118,7 +118,7 @@ struct User {
 		let isDogLover: Bool
 		let motto: String
 		let skills: [String]
-		static func fromJSONDictionary(_ info: [String: AnyObject]) -> Detail? {
+		static func fromJSONDictionary(_ info: JSONDictionary) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
 			let gender = info["gender"] as? UnknownType
@@ -133,29 +133,33 @@ struct User {
 	struct Project {
 		let name: String
 		let url: String
-		static func fromJSONDictionary(_ info: [String: AnyObject]) -> Project? {
+		static func fromJSONDictionary(_ info: JSONDictionary) -> Project? {
 			guard let name = info["name"] as? String else { return nil }
 			guard let url = info["url"] as? String else { return nil }
 			return Project(name: name, url: url)
 		}
 	}
 	let projects: [Project]
-	static func fromJSONDictionary(_ info: [String: AnyObject]) -> User? {
-		guard let detailJSONDictionary = info["detail"] as? [String: AnyObject] else { return nil }
+	static func fromJSONDictionary(_ info: JSONDictionary) -> User? {
+		guard let detailJSONDictionary = info["detail"] as? JSONDictionary else { return nil }
 		guard let detail = Detail.fromJSONDictionary(detailJSONDictionary) else { return nil }
 		guard let name = info["name"] as? String else { return nil }
-		guard let projectsJSONArray = info["projects"] as? [[String: AnyObject]] else { return nil }
+		guard let projectsJSONArray = info["projects"] as? [JSONDictionary] else { return nil }
 		let projects = projectsJSONArray.map({ Project.fromJSONDictionary($0) }).flatMap({ $0 })
 		return User(detail: detail, name: name, projects: projects)
 	}
 }
 ```
 
+You may need `typealias JSONDictionary = [String: Any]` at first.
+
 If you need class model, use the following command:
 
 ``` bash
 $ ./.build/debug/coolie -i test.json --model-name User --model-type class
 ```
+
+If you need more information for debug, append a `--debug` option in the command.
 
 ## Contact
 
