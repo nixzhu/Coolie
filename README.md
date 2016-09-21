@@ -42,7 +42,7 @@ Build coolie & run:
 
 ``` bash
 $ swift build
-$ ./.build/debug/coolie -i test.json --model-name User
+$ ./.build/debug/coolie -i test.json --model-name User --argument-label json
 ```
 
 It will generate:
@@ -56,7 +56,7 @@ struct User {
 		let isDogLover: Bool
 		let motto: String
 		let skills: [String]
-		init?(_ info: [String: Any]) {
+		init?(json info: [String: Any]) {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
 			let gender = info["gender"] as? UnknownType
@@ -76,7 +76,7 @@ struct User {
 	struct Project {
 		let name: String
 		let url: String
-		init?(_ info: [String: Any]) {
+		init?(json info: [String: Any]) {
 			guard let name = info["name"] as? String else { return nil }
 			guard let url = info["url"] as? String else { return nil }
 			self.name = name
@@ -84,12 +84,12 @@ struct User {
 		}
 	}
 	let projects: [Project]
-	init?(_ info: [String: Any]) {
+	init?(json info: [String: Any]) {
 		guard let detailJSONDictionary = info["detail"] as? [String: Any] else { return nil }
-		guard let detail = Detail(detailJSONDictionary) else { return nil }
+		guard let detail = Detail(json: detailJSONDictionary) else { return nil }
 		guard let name = info["name"] as? String else { return nil }
 		guard let projectsJSONArray = info["projects"] as? [[String: Any]] else { return nil }
-		let projects = projectsJSONArray.map({ Project($0) }).flatMap({ $0 })
+		let projects = projectsJSONArray.map({ Project(json: $0) }).flatMap({ $0 })
 		self.detail = detail
 		self.name = name
 		self.projects = projects
