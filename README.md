@@ -101,10 +101,10 @@ Pretty cool, ah?
 
 Now you can modify the models (the name of properties or their type) if you need.
 
-You can specify constructor name or json dictionary name like following command:
+You can specify constructor name, argument label, or json dictionary name, like following command:
 
 ``` bash
-$ ./.build/debug/coolie -i test.json --model-name User --constructor-name fromJSONDictionary --json-dictionary-name JSONDictionary
+$ ./.build/debug/coolie -i test.json --model-name User --constructor-name create --argument-label with --json-dictionary-name JSONDictionary
 ```
 
 It will generate:
@@ -118,7 +118,7 @@ struct User {
 		let isDogLover: Bool
 		let motto: String
 		let skills: [String]
-		static func fromJSONDictionary(_ info: JSONDictionary) -> Detail? {
+		static func create(with info: JSONDictionary) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
 			let gender = info["gender"] as? UnknownType
@@ -133,19 +133,19 @@ struct User {
 	struct Project {
 		let name: String
 		let url: String
-		static func fromJSONDictionary(_ info: JSONDictionary) -> Project? {
+		static func create(with info: JSONDictionary) -> Project? {
 			guard let name = info["name"] as? String else { return nil }
 			guard let url = info["url"] as? String else { return nil }
 			return Project(name: name, url: url)
 		}
 	}
 	let projects: [Project]
-	static func fromJSONDictionary(_ info: JSONDictionary) -> User? {
+	static func create(with info: JSONDictionary) -> User? {
 		guard let detailJSONDictionary = info["detail"] as? JSONDictionary else { return nil }
-		guard let detail = Detail.fromJSONDictionary(detailJSONDictionary) else { return nil }
+		guard let detail = Detail.create(with: detailJSONDictionary) else { return nil }
 		guard let name = info["name"] as? String else { return nil }
 		guard let projectsJSONArray = info["projects"] as? [JSONDictionary] else { return nil }
-		let projects = projectsJSONArray.map({ Project.fromJSONDictionary($0) }).flatMap({ $0 })
+		let projects = projectsJSONArray.map({ Project.create(with: $0) }).flatMap({ $0 })
 		return User(detail: detail, name: name, projects: projects)
 	}
 }
@@ -159,7 +159,9 @@ If you need class model, use the following command:
 $ ./.build/debug/coolie -i test.json --model-name User --model-type class
 ```
 
-If you need more information for debug, append a `--debug` option in the command.
+Also `--argument-label` and `--json-dictionary-name` options are available for class.
+
+If you need more information for debug, append a `--debug` option in all the commands.
 
 ## Contact
 
