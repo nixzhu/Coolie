@@ -44,8 +44,6 @@ func main(_ arguments: [String]) {
 
     let coolie = Coolie(jsonString)
 
-    let modelTypeOption = Arguments.Option.Long(key: "model-type")
-
     let constructorNameOption = Arguments.Option.Long(key: "constructor-name")
     let constructorName = arguments.valueOfOption(constructorNameOption)
 
@@ -55,20 +53,13 @@ func main(_ arguments: [String]) {
     let debugOption = Arguments.Option.Long(key: "debug")
     let debug = arguments.containsOption(debugOption)
 
-    if let modelType = arguments.valueOfOption(modelTypeOption)?.lowercased() {
-        if let type = Coolie.ModelType(rawValue: modelType.lowercased()) {
-            if let model = coolie.generateModel(name: modelName, type: type, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug) {
-                print(model)
-                return
-            }
-        }
+    let modelTypeOption = Arguments.Option.Long(key: "model-type")
+    let modelTypeRawValue = arguments.valueOfOption(modelTypeOption)?.lowercased()
+    let modelType = modelTypeRawValue.flatMap({ Coolie.ModelType(rawValue: $0) }) ?? Coolie.ModelType.struct
 
-    } else {
-        if let model = coolie.generateModel(name: modelName, type: Coolie.ModelType.struct, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug) {
-            print(model)
-            return
-        }
-    }
+    let model = coolie.generateModel(name: modelName, type: modelType, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug)
+
+    model.flatMap({ print($0) })
 }
 
 main(CommandLine.arguments)
