@@ -697,10 +697,10 @@ private extension Coolie.Value {
 
             // generate method
             indentLevel(level + 1)
+            let initArgumentLabel = argumentLabel ?? "_"
             if let constructorName = constructorName {
-                string += "static func \(constructorName)(_ info: \(jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
+                string += "static func \(constructorName)(\(initArgumentLabel) info: \(jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
             } else {
-                let initArgumentLabel = argumentLabel ?? "_"
                 string += "init?(\(initArgumentLabel) info: \(jsonDictionaryName)) {\n"
             }
             let trueArgumentLabel = argumentLabel.flatMap({ "\($0): " }) ?? ""
@@ -713,7 +713,7 @@ private extension Coolie.Value {
                             string += debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
                             indentLevel(level + 2)
                             if let constructorName = constructorName {
-                                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             } else {
                                 string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             }
@@ -733,7 +733,7 @@ private extension Coolie.Value {
                                 string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 indentLevel(level + 2)
                                 if let constructorName = constructorName {
-                                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)($0) }).flatMap({ $0 })\n"
+                                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                                 } else {
                                     string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                                 }
