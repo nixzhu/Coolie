@@ -42,22 +42,16 @@ final public class Arguments {
     let keyValues: [String: Value]
 
     public init(_ arguments: [String]) {
-
         guard arguments.count > 1 else {
             self.keyValues = [:]
             return
         }
-
         var keyValues = [String: Value]()
-
         var i = 1
-
         while true {
             let _a = arguments[arguments_safe: i]
             let _b = arguments[arguments_safe: i + 1]
-
             guard let a = _a else { break }
-
             if a.arguments_isKey {
                 if let b = _b, !b.arguments_isKey {
                     keyValues[a] = Value.Exist(b)
@@ -69,7 +63,6 @@ final public class Arguments {
                 print("Invalid argument: \(a)")
                 break
             }
-
             if let b = _b {
                 if b.arguments_isKey {
                     i += 1
@@ -80,12 +73,10 @@ final public class Arguments {
                 break
             }
         }
-
         self.keyValues = keyValues
     }
 
     public func containsOption(_ option: Option) -> Bool {
-
         switch option {
         case .Short(let key):
             return keyValues["-" + key] != nil
@@ -97,12 +88,10 @@ final public class Arguments {
     }
 
     public func containsOptions(_ options: [Option]) -> Bool {
-
         return options.reduce(true, { $0 && containsOption($1) })
     }
 
     public func valueOfOption(_ option: Option) -> String? {
-
         switch option {
         case .Short(let key):
             return keyValues["-" + key]?.value
