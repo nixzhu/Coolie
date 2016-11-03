@@ -48,25 +48,16 @@ extension Coolie.Value {
                                     } else {
                                         string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                                     }
-                                    //string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                                 }
                             } else {
                                 string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
                             }
-                            /*
-                            if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
-                                string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
-                            } else {
-                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
-                            }*/
                         } else {
                             string += "var \(key.coolie_lowerCamelCase): \(key.capitalized)\n"
                         }
                     } else {
                         indentLevel(level + 1)
                         string += "var \(key.coolie_lowerCamelCase): \(value.type)\n"
-                        //string += "var \(key.coolie_lowerCamelCase): "
-                        //value.generateClass(fromLevel: level, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                     }
                 }
             }
@@ -86,7 +77,6 @@ extension Coolie.Value {
                             string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
                             string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
                         } else if value.isArray {
-                            //if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                             if case .array(_, let values) = value, let unionValue = unionValues(values) {
                                 if case .null(let optionalValue) = unionValue {
                                     if let value = optionalValue {
@@ -118,24 +108,7 @@ extension Coolie.Value {
                                         string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
                                         string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                     }
-                                    //indentLevel(level + 2)
-                                    //string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-                                    //string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 }
-                                /*
-                                indentLevel(level + 2)
-                                if case .null(let optionalValue) = value {
-                                    let type: String
-                                    if let value = optionalValue {
-                                        type = "\(value.type)"
-                                    } else {
-                                        type = "UnknownType"
-                                    }
-                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-                                } else {
-                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-                                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                }*/
                             } else {
                                 indentLevel(level + 2)
                                 string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
@@ -186,10 +159,6 @@ extension Coolie.Value {
                         unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                     }
                 }
-                /*
-                if unionValue.isDictionaryOrArray {
-                    unionValue.generateClass(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
-                }*/
             }
         }
     }

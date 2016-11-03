@@ -118,7 +118,6 @@ extension Coolie.Value {
                                         } else {
                                             string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                                         }
-                                        //string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(key.capitalized.coolie_dropLastCharacter)] else { "
                                     } else {
                                         indentLevel(level + 2)
                                         string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
