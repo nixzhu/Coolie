@@ -30,6 +30,16 @@ Swift 3.0
     "daily_fantasy_hours": [4, 3.5, -4.2],
     "dreams": [null, "Love", null, "Hate"]
   },
+  "experiences": [
+    {
+      "name": "Linux",
+      "age": 2.5
+    },
+    {
+      "name": "iOS",
+      "age": 4
+    }
+  ],
   "projects": [
     {
       "name": "Coolie",
@@ -39,6 +49,7 @@ Swift 3.0
         "code": "nixzhu"
       }
     },
+    null,
     {
       "name": null,
       "url": "https://github.com/nixzhu/XProject",
@@ -73,7 +84,7 @@ struct User {
 		init?(json info: [String: Any]) {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
-			let dreams = info["dreams"] as? String
+			guard let dreams = info["dreams"] as? [String?] else { return nil }
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
@@ -88,6 +99,17 @@ struct User {
 		}
 	}
 	let detail: Detail
+	struct Experience {
+		let age: Double
+		let name: String
+		init?(json info: [String: Any]) {
+			guard let age = info["age"] as? Double else { return nil }
+			guard let name = info["name"] as? String else { return nil }
+			self.age = age
+			self.name = name
+		}
+	}
+	let experiences: [Experience]
 	let name: String
 	struct Project {
 		struct More {
@@ -113,14 +135,17 @@ struct User {
 			self.url = url
 		}
 	}
-	let projects: [Project]
+	let projects: [Project?]
 	init?(json info: [String: Any]) {
 		guard let detailJSONDictionary = info["detail"] as? [String: Any] else { return nil }
 		guard let detail = Detail(json: detailJSONDictionary) else { return nil }
+		guard let experiencesJSONArray = info["experiences"] as? [[String: Any]] else { return nil }
+		let experiences = experiencesJSONArray.map({ Experience(json: $0) }).flatMap({ $0 })
 		guard let name = info["name"] as? String else { return nil }
-		guard let projectsJSONArray = info["projects"] as? [[String: Any]] else { return nil }
-		let projects = projectsJSONArray.map({ Project(json: $0) }).flatMap({ $0 })
+		guard let projectsJSONArray = info["projects"] as? [[String: Any]?] else { return nil }
+		let projects = projectsJSONArray.map({ $0.flatMap({ Project(json: $0) }) })
 		self.detail = detail
+		self.experiences = experiences
 		self.name = name
 		self.projects = projects
 	}
@@ -152,7 +177,7 @@ struct User {
 		static func create(with info: JSONDictionary) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
-			let dreams = info["dreams"] as? String
+			guard let dreams = info["dreams"] as? [String?] else { return nil }
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
@@ -161,6 +186,16 @@ struct User {
 		}
 	}
 	let detail: Detail
+	struct Experience {
+		let age: Double
+		let name: String
+		static func create(with info: JSONDictionary) -> Experience? {
+			guard let age = info["age"] as? Double else { return nil }
+			guard let name = info["name"] as? String else { return nil }
+			return Experience(age: age, name: name)
+		}
+	}
+	let experiences: [Experience]
 	let name: String
 	struct Project {
 		struct More {
@@ -183,14 +218,16 @@ struct User {
 			return Project(more: more, name: name, url: url)
 		}
 	}
-	let projects: [Project]
+	let projects: [Project?]
 	static func create(with info: JSONDictionary) -> User? {
 		guard let detailJSONDictionary = info["detail"] as? JSONDictionary else { return nil }
 		guard let detail = Detail.create(with: detailJSONDictionary) else { return nil }
+		guard let experiencesJSONArray = info["experiences"] as? [JSONDictionary] else { return nil }
+		let experiences = experiencesJSONArray.map({ Experience.create(with: $0) }).flatMap({ $0 })
 		guard let name = info["name"] as? String else { return nil }
-		guard let projectsJSONArray = info["projects"] as? [JSONDictionary] else { return nil }
-		let projects = projectsJSONArray.map({ Project.create(with: $0) }).flatMap({ $0 })
-		return User(detail: detail, name: name, projects: projects)
+		guard let projectsJSONArray = info["projects"] as? [JSONDictionary?] else { return nil }
+		let projects = projectsJSONArray.map({ $0.flatMap({ Project.create(with: $0) }) })
+		return User(detail: detail, experiences: experiences, name: name, projects: projects)
 	}
 }
 ```

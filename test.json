@@ -12,13 +12,13 @@
     "daily_fantasy_hours": [4, 3.5, -4.2],
     "dreams": [null, "Love", null, "Hate"]
   },
-  "devices": [
+  "experiences": [
     {
-      "name": "iPhone",
-      "age": 3
+      "name": "Linux",
+      "age": 2.5
     },
     {
-      "name": "iPad",
+      "name": "iOS",
       "age": 4
     }
   ],
@@ -31,6 +31,7 @@
         "code": "nixzhu"
       }
     },
+    null,
     {
       "name": null,
       "url": "https://github.com/nixzhu/XProject",
@@ -38,7 +39,6 @@
         "design": null,
         "code": "unknown"
       }
-    },
-    null
+    }
   ]
 }
