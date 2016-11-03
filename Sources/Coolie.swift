@@ -62,7 +62,7 @@ final public class Coolie {
         case number(NumberType)
         case string(String)
         indirect case null(Value?)
-        indirect case dictionary(name: String?, info: [String: Value])
+        indirect case dictionary([String: Value])
         indirect case array(name: String?, values: [Value])
     }
 
@@ -242,18 +242,8 @@ final public class Coolie {
                 next += 1
                 return parseArray(name: arrayName)
             case .beginObject:
-                var dictionaryName: String?
-//                let nameIndex = next - 2
-//                if nameIndex >= 0 {
-//                    if let nameToken = tokens[coolie_safe: nameIndex] {
-//                        if case .string(let name) = nameToken {
-//                            dictionaryName = name.capitalized
-//                        }
-//                    }
-//                }
-//                print("dictionaryName: \(dictionaryName)")
                 next += 1
-                return parseObject(name: dictionaryName)
+                return parseObject()
             case .bool:
                 return parseBool()
             case .number:
@@ -302,7 +292,7 @@ final public class Coolie {
             }
         }
 
-        func parseObject(name: String? = nil) -> Value? {
+        func parseObject() -> Value? {
             guard let token = tokens[coolie_safe: next] else {
                 print("No token for parseObject")
                 return nil
@@ -310,7 +300,7 @@ final public class Coolie {
             var dictionary = [String: Value]()
             if case .endObject = token {
                 next += 1
-                return .dictionary(name: name, info: dictionary)
+                return .dictionary(dictionary)
             } else {
                 while true {
                     guard let key = parseString(), let _ = parseColon(), let value = parseValue() else {
@@ -323,7 +313,7 @@ final public class Coolie {
                     if let token = tokens[coolie_safe: next] {
                         if case .endObject = token {
                             next += 1
-                            return .dictionary(name: name, info: dictionary)
+                            return .dictionary(dictionary)
                         } else {
                             guard let _ = parseComma() else {
                                 print("Expect comma")
@@ -454,8 +444,8 @@ private extension Coolie.Value {
             } else {
                 return "UnknownType?"
             }
-        case .dictionary(let name, _):
-            return name ?? "UnknownTypeDDD"
+        //case .dictionary(let name, _):
+        //    return name ?? "UnknownTypeDDD"
         default:
             fatalError("Unknown type")
         }
@@ -559,7 +549,7 @@ private extension Coolie.Value {
             }
         case (.string, .string):
             return .string("")
-        case (.dictionary(let aName, let aInfo), .dictionary(let bName, let bInfo)):
+        case (.dictionary(let aInfo), .dictionary(let bInfo)):
             var info = aInfo
             for key in aInfo.keys {
                 guard let aValue = aInfo[key] else { fatalError() }
@@ -577,7 +567,7 @@ private extension Coolie.Value {
                     info[key] = .null(bValue)
                 }
             }
-            return .dictionary(name: aName ?? bName, info: info)
+            return .dictionary(info)
         case (let .array(aName, aValues), let .array(bName, bValues)):
             let values = (aValues + bValues)
             if let first = values.first {
@@ -611,10 +601,8 @@ private extension Coolie.Value {
         let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
         switch self {
         case .bool, .number, .string, .null:
-            //string += "\(type)\n"
             break
-        case .dictionary(let name, let info):
-            print("")
+        case .dictionary(let info):
             // struct name
             indentLevel(level)
             string += "struct \(modelName ?? "Model") {\n"
@@ -626,8 +614,16 @@ private extension Coolie.Value {
                     indentLevel(level + 1)
                     if value.isArray {
                         if case .array(_, let values) = value, let unionValue = unionValues(values) {
-                            if case .null = unionValue {
-                                string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]\n"
+                            if case .null(let optionalValue) = unionValue {
+                                if let _value = optionalValue {
+                                    if _value.isDictionary {
+                                        string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]\n"
+                                    } else {
+                                        string += "let \(key.coolie_lowerCamelCase): [\(_value.type)?]\n"
+                                    }
+                                } else {
+                                    string += "let \(key.coolie_lowerCamelCase): [UnknowType?]\n"
+                                }
                             } else {
                                 string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
                             }
@@ -640,8 +636,6 @@ private extension Coolie.Value {
                 } else {
                     indentLevel(level + 1)
                     string += "let \(key.coolie_lowerCamelCase): \(value.type)\n"
-                    //string += "let \(key.coolie_lowerCamelCase): "
-                    //value.generateStruct(fromLevel: level, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                 }
             }
             // generate method
@@ -655,14 +649,6 @@ private extension Coolie.Value {
             let trueArgumentLabel = argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
                 if let value = info[key] {
-                    /*
-                    var value = value
-                    if case .null(let optionalValue) = value {
-                        if let _value = optionalValue {
-                            value = _value
-                        }
-                    }
-                     */
                     if value.isDictionaryOrArray {
                         if value.isDictionary {
                             indentLevel(level + 2)
@@ -676,7 +662,6 @@ private extension Coolie.Value {
                             }
                             string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
                         } else if value.isArray {
-                            //if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                             if case .array(_, let values) = value, let unionValue = unionValues(values) {
                                 if case .null(let optionalValue) = unionValue {
                                     if let value = optionalValue {
@@ -686,9 +671,11 @@ private extension Coolie.Value {
                                             string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                             indentLevel(level + 2)
                                             if let constructorName = constructorName {
-                                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.flatMap({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) })\n"
+                                                //string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.flatMap({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) })\n"
+                                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) }) })\n"
                                             } else {
-                                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) })\n"
+                                                //string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) })\n"
+                                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
                                             }
                                         } else {
                                             indentLevel(level + 2)
@@ -727,23 +714,6 @@ private extension Coolie.Value {
                                 type = "UnknownType"
                             }
                             string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-                            /*
-                            print("optionalValue: \(optionalValue)")
-                            if var value = optionalValue {
-                                print("fuck value: \(value)")
-                                if case .dictionary(let _name, let info) = value {
-                                    value = .dictionary(name: _name ?? name, info: info)
-                                }
-                                //value.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
-                            } else {
-                                let type: String
-                                if let value = optionalValue {
-                                    type = "\(value.type)"
-                                } else {
-                                    type = "UnknownType"
-                                }
-                                string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-                            }*/
                         } else {
                             string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
                             string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
@@ -760,7 +730,6 @@ private extension Coolie.Value {
                     string += "\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix
                 }
                 string += "\n"
-
             } else {
                 for key in info.keys.sorted() {
                     indentLevel(level + 2)
@@ -774,15 +743,11 @@ private extension Coolie.Value {
             string += "}\n"
         case .array(let name, let values):
             if let unionValue = unionValues(values) {
-                print("unionValue: \(unionValue)")
                 if case .null(let optionalValue) = unionValue {
                     if var value = optionalValue {
-                        if case .dictionary(let _name, let info) = value {
-                            value = .dictionary(name: _name ?? name, info: info)
-                            print("value: \(value)")
+                        if case .dictionary(let info) = value {
+                            value = .dictionary(info)
                             value.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
-                        } else {
-                            print("do nothing")
                         }
                     } else {
                         fatalError("empty array")
@@ -792,11 +757,6 @@ private extension Coolie.Value {
                         unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                     }
                 }
-                /*
-                if unionValue.isDictionaryOrArray {
-                    unionValue.generateStruct(fromLevel: level, withModelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
-                }
-                 */
             }
         }
     }
@@ -817,7 +777,7 @@ private extension Coolie.Value {
         switch self {
         case .bool, .number, .string, .null:
             string += "\(type)\n"
-        case .dictionary(let name, let info):
+        case .dictionary(let info):
             // struct name
             indentLevel(level)
             string += "class \(modelName ?? "Model") {\n"
