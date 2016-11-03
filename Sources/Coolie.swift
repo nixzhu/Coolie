@@ -579,52 +579,6 @@ private extension Coolie.Value {
         }
     }
 
-//    private func union(_ otherValue: Coolie.Value) -> Coolie.Value {
-//        guard case .dictionary(let info) = self else {
-//            return self
-//        }
-//        guard case .dictionary(let otherInfo) = otherValue else {
-//            return self
-//        }
-//        var newInfo = info
-//        let keys = otherInfo.keys
-//        for key in keys {
-//            let _property: Coolie.Value
-//            if
-//                let property = otherInfo[key], case .dictionary(let subInfo) = property,
-//                let otherProperty = otherInfo[key], case .dictionary(let otherSubInfo) = otherProperty {
-//                _property = property.union(otherProperty)
-//            } else {
-//                _property = otherInfo[key] ?? info[key] ?? Coolie.Value.null
-//            }
-//
-//            newInfo[key] = otherInfo[key] ?? info[key] ?? Coolie.Value.null
-//        }
-//        return .dictionary(newInfo)
-//    }
-
-//    func unionValues(_ values: [Coolie.Value]) -> Coolie.Value? {
-//        guard values.count > 1 else {
-//            return values.first
-//        }
-//        if let first = values.first, case .dictionary(let firstInfo) = first {
-//            var info: [String: Coolie.Value] = firstInfo
-//            let keys = firstInfo.keys
-//            for i in 1..<values.count {
-//                let next = values[i]
-//                if case .dictionary(let nextInfo) = next {
-//                    for key in keys {
-//                        if let value = nextInfo[key], !value.isNull {
-//                            info[key] = value
-//                        }
-//                    }
-//                }
-//            }
-//            return .dictionary(info)
-//        }
-//        return values.first
-//    }
-
     func unionValues(_ values: [Coolie.Value]) -> Coolie.Value? {
         if let first = values.first {
             return values.dropFirst().reduce(first, { $0.union($1) })
@@ -713,12 +667,6 @@ private extension Coolie.Value {
                                     string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
                                     string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 }
-//                                if unionValue.isNull {
-//                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
-//                                } else {
-//                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-//                                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-//                                }
                             } else {
                                 indentLevel(level + 2)
                                 string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
@@ -745,12 +693,6 @@ private extension Coolie.Value {
                             string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
                             string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
-//                        if value.isNull {
-//                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
-//                        } else {
-//                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
-//                            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
-//                        }
                     }
                 }
             }
@@ -856,12 +798,6 @@ private extension Coolie.Value {
                                     string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
                                     string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 }
-//                                if unionValue.isNull {
-//                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
-//                                } else {
-//                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-//                                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-//                                }
                             } else {
                                 indentLevel(level + 2)
                                 string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
@@ -884,12 +820,6 @@ private extension Coolie.Value {
                             string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
                             string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
-//                        if value.isNull {
-//                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
-//                        } else {
-//                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
-//                            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
-//                        }
                     }
                 }
             }
