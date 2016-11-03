@@ -12,6 +12,16 @@
     "daily_fantasy_hours": [4, 3.5, -4.2],
     "dreams": [null, "Love", null, "Hate"]
   },
+  "devices": [
+    {
+      "name": "iPhone",
+      "age": 3
+    },
+    {
+      "name": "iPad",
+      "age": 4
+    }
+  ],
   "projects": [
     {
       "name": "Coolie",

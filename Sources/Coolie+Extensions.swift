@@ -30,7 +30,7 @@ extension Coolie.Value {
                 return "UnknownType?"
             }
         default:
-            fatalError("Unknown type")
+            fatalError("no type for: \(self)")
         }
     }
 

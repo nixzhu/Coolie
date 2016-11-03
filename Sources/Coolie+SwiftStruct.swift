@@ -43,7 +43,11 @@ extension Coolie.Value {
                                     string += "let \(key.coolie_lowerCamelCase): [UnknowType?]\n"
                                 }
                             } else {
-                                string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
+                                if unionValue.isDictionary {
+                                    string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
+                                } else {
+                                    string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
+                                }
                             }
                         } else {
                             string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
@@ -104,9 +108,22 @@ extension Coolie.Value {
                                         string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
                                     }
                                 } else {
-                                    indentLevel(level + 2)
-                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-                                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                                    if unionValue.isDictionary {
+                                        indentLevel(level + 2)
+                                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
+                                        string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                                        indentLevel(level + 2)
+                                        if let constructorName = constructorName {
+                                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                                        } else {
+                                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                                        }
+                                        //string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(key.capitalized.coolie_dropLastCharacter)] else { "
+                                    } else {
+                                        indentLevel(level + 2)
+                                        string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
+                                        string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                                    }
                                 }
                             } else {
                                 indentLevel(level + 2)
