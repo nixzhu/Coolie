@@ -27,12 +27,25 @@ Swift 3.0
       "C on Linux"
     ],
     "motto": "爱你所爱，恨你所恨。",
-    "daily_fantasy_hours": [-0.1, 3.5, 4.2]
+    "daily_fantasy_hours": [4, 3.5, -4.2],
+    "dreams": [null, "Love", null, "Hate"]
   },
   "projects": [
     {
       "name": "Coolie",
-      "url": "https://github.com/nixzhu/Coolie"
+      "url": "https://github.com/nixzhu/Coolie",
+      "more": {
+        "design": "nixzhu",
+        "code": "nixzhu"
+      }
+    },
+    {
+      "name": null,
+      "url": "https://github.com/nixzhu/XProject",
+      "more": {
+        "design": null,
+        "code": "unknown"
+      }
     }
   ]
 }
@@ -52,6 +65,7 @@ struct User {
 	struct Detail {
 		let age: Int
 		let dailyFantasyHours: [Double]
+		let dreams: [String?]
 		let gender: UnknownType?
 		let isDogLover: Bool
 		let motto: String
@@ -59,12 +73,14 @@ struct User {
 		init?(json info: [String: Any]) {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
+			let dreams = info["dreams"] as? String
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
 			self.age = age
 			self.dailyFantasyHours = dailyFantasyHours
+			self.dreams = dreams
 			self.gender = gender
 			self.isDogLover = isDogLover
 			self.motto = motto
@@ -74,11 +90,25 @@ struct User {
 	let detail: Detail
 	let name: String
 	struct Project {
-		let name: String
+		struct More {
+			let code: String
+			let design: String?
+			init?(json info: [String: Any]) {
+				guard let code = info["code"] as? String else { return nil }
+				let design = info["design"] as? String
+				self.code = code
+				self.design = design
+			}
+		}
+		let more: More
+		let name: String?
 		let url: String
 		init?(json info: [String: Any]) {
-			guard let name = info["name"] as? String else { return nil }
+			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
+			guard let more = More(json: moreJSONDictionary) else { return nil }
+			let name = info["name"] as? String
 			guard let url = info["url"] as? String else { return nil }
+			self.more = more
 			self.name = name
 			self.url = url
 		}
@@ -114,6 +144,7 @@ struct User {
 	struct Detail {
 		let age: Int
 		let dailyFantasyHours: [Double]
+		let dreams: [String?]
 		let gender: UnknownType?
 		let isDogLover: Bool
 		let motto: String
@@ -121,22 +152,35 @@ struct User {
 		static func create(with info: JSONDictionary) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
 			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
+			let dreams = info["dreams"] as? String
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
-			return Detail(age: age, dailyFantasyHours: dailyFantasyHours, gender: gender, isDogLover: isDogLover, motto: motto, skills: skills)
+			return Detail(age: age, dailyFantasyHours: dailyFantasyHours, dreams: dreams, gender: gender, isDogLover: isDogLover, motto: motto, skills: skills)
 		}
 	}
 	let detail: Detail
 	let name: String
 	struct Project {
-		let name: String
+		struct More {
+			let code: String
+			let design: String?
+			static func create(with info: JSONDictionary) -> More? {
+				guard let code = info["code"] as? String else { return nil }
+				let design = info["design"] as? String
+				return More(code: code, design: design)
+			}
+		}
+		let more: More
+		let name: String?
 		let url: String
 		static func create(with info: JSONDictionary) -> Project? {
-			guard let name = info["name"] as? String else { return nil }
+			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
+			guard let more = More.create(with: moreJSONDictionary) else { return nil }
+			let name = info["name"] as? String
 			guard let url = info["url"] as? String else { return nil }
-			return Project(name: name, url: url)
+			return Project(more: more, name: name, url: url)
 		}
 	}
 	let projects: [Project]
