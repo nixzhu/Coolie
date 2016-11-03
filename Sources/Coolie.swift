@@ -61,7 +61,7 @@ final public class Coolie {
         }
         case number(NumberType)
         case string(String)
-        case null
+        indirect case null(Value?)
         indirect case dictionary([String: Value])
         indirect case array(name: String?, values: [Value])
     }
@@ -414,7 +414,7 @@ final public class Coolie {
                 return nil
             }
             if case .null = token {
-                return .null
+                return .null(nil)
             }
             return nil
         }
@@ -438,8 +438,12 @@ private extension Coolie.Value {
             }
         case .string:
             return "String"
-        case .null:
-            return "UnknownType?"
+        case .null(let value):
+            if let value = value {
+                return "\(value.type)?"
+            } else {
+                return "UnknownType?"
+            }
         default:
             fatalError("Unknown type")
         }
@@ -507,26 +511,126 @@ private extension Coolie.Token {
 
 private extension Coolie.Value {
 
-    func unionValues(_ values: [Coolie.Value]) -> Coolie.Value? {
-        guard values.count > 1 else {
-            return values.first
-        }
-        if let first = values.first, case .dictionary(let firstInfo) = first {
-            var info: [String: Coolie.Value] = firstInfo
-            let keys = firstInfo.keys
-            for i in 1..<values.count {
-                let next = values[i]
-                if case .dictionary(let nextInfo) = next {
-                    for key in keys {
-                        if let value = nextInfo[key], !value.isNull {
-                            info[key] = value
-                        }
-                    }
+    private func union(_ otherValue: Coolie.Value) -> Coolie.Value {
+        switch (self, otherValue) {
+        case (.null(let aOptionalValue), .null(let bOptionalValue)):
+            switch (aOptionalValue, bOptionalValue) {
+            case (.some(let a), .some(let b)):
+                return .null(a.union(b))
+            case (.some(let a), .none):
+                return .null(a)
+            case (.none, .some(let b)):
+                return .null(b)
+            case (.none, .none):
+                return .null(nil)
+            }
+        case (.null(let value), let bValue):
+            if let aValue = value {
+                return .null(.some(aValue.union(bValue)))
+            } else {
+                return .null(.some(bValue))
+            }
+        case (let aValue, .null(let value)):
+            if let bValue = value {
+                return .null(.some(bValue.union(aValue)))
+            } else {
+                return .null(.some(aValue))
+            }
+        case (.bool, .bool):
+            return .bool(true)
+        case (.number(let aNumber), .number(let bNumber)):
+            switch (aNumber, bNumber) {
+            case (.int, .int):
+                return .number(.int(1))
+            default:
+                return .number(.double(1.0))
+            }
+        case (.string, .string):
+            return .string("")
+        case (.dictionary(let aInfo), .dictionary(let bInfo)):
+            var info = aInfo
+            for key in aInfo.keys {
+                guard let aValue = aInfo[key] else { fatalError() }
+                if let bValue = bInfo[key] {
+                    info[key] = aValue.union(bValue)
+                } else {
+                    info[key] = .null(aValue)
+                }
+            }
+            for key in bInfo.keys {
+                guard let bValue = bInfo[key] else { fatalError() }
+                if let aValue = aInfo[key] {
+                    info[key] = bValue.union(aValue)
+                } else {
+                    info[key] = .null(bValue)
                 }
             }
             return .dictionary(info)
+        case (let .array(aName, aValues), let .array(bName, bValues)):
+            let values = (aValues + bValues)
+            if let first = values.first {
+                let value = values.dropFirst().reduce(first, { $0.union($1) })
+                return .array(name: aName ?? bName, values: [value])
+            } else {
+                return .array(name: aName ?? bName, values: [])
+            }
+        default:
+            fatalError("Unsupported union!")
         }
-        return values.first
+    }
+
+//    private func union(_ otherValue: Coolie.Value) -> Coolie.Value {
+//        guard case .dictionary(let info) = self else {
+//            return self
+//        }
+//        guard case .dictionary(let otherInfo) = otherValue else {
+//            return self
+//        }
+//        var newInfo = info
+//        let keys = otherInfo.keys
+//        for key in keys {
+//            let _property: Coolie.Value
+//            if
+//                let property = otherInfo[key], case .dictionary(let subInfo) = property,
+//                let otherProperty = otherInfo[key], case .dictionary(let otherSubInfo) = otherProperty {
+//                _property = property.union(otherProperty)
+//            } else {
+//                _property = otherInfo[key] ?? info[key] ?? Coolie.Value.null
+//            }
+//
+//            newInfo[key] = otherInfo[key] ?? info[key] ?? Coolie.Value.null
+//        }
+//        return .dictionary(newInfo)
+//    }
+
+//    func unionValues(_ values: [Coolie.Value]) -> Coolie.Value? {
+//        guard values.count > 1 else {
+//            return values.first
+//        }
+//        if let first = values.first, case .dictionary(let firstInfo) = first {
+//            var info: [String: Coolie.Value] = firstInfo
+//            let keys = firstInfo.keys
+//            for i in 1..<values.count {
+//                let next = values[i]
+//                if case .dictionary(let nextInfo) = next {
+//                    for key in keys {
+//                        if let value = nextInfo[key], !value.isNull {
+//                            info[key] = value
+//                        }
+//                    }
+//                }
+//            }
+//            return .dictionary(info)
+//        }
+//        return values.first
+//    }
+
+    func unionValues(_ values: [Coolie.Value]) -> Coolie.Value? {
+        if let first = values.first {
+            return values.dropFirst().reduce(first, { $0.union($1) })
+        } else {
+            return nil
+        }
     }
 }
 
@@ -597,12 +701,24 @@ private extension Coolie.Value {
                         } else if value.isArray {
                             if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
-                                if unionValue.isNull {
-                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+                                if case .null(let optionalValue) = unionValue {
+                                    let type: String
+                                    if let value = optionalValue {
+                                        type = "\(value.type)"
+                                    } else {
+                                        type = "UnknownType"
+                                    }
+                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
                                 } else {
                                     string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
                                     string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 }
+//                                if unionValue.isNull {
+//                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+//                                } else {
+//                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
+//                                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+//                                }
                             } else {
                                 indentLevel(level + 2)
                                 string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
@@ -617,12 +733,24 @@ private extension Coolie.Value {
                         }
                     } else {
                         indentLevel(level + 2)
-                        if value.isNull {
-                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+                        if case .null(let optionalValue) = value {
+                            let type: String
+                            if let value = optionalValue {
+                                type = "\(value.type)"
+                            } else {
+                                type = "UnknownType"
+                            }
+                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
                         } else {
                             string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
                             string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
+//                        if value.isNull {
+//                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+//                        } else {
+//                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
+//                            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+//                        }
                     }
                 }
             }
@@ -716,12 +844,24 @@ private extension Coolie.Value {
                         } else if value.isArray {
                             if case .array(_, let values) = value, let unionValue = unionValues(values), !unionValue.isDictionaryOrArray {
                                 indentLevel(level + 2)
-                                if unionValue.isNull {
-                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+                                if case .null(let optionalValue) = value {
+                                    let type: String
+                                    if let value = optionalValue {
+                                        type = "\(value.type)"
+                                    } else {
+                                        type = "UnknownType"
+                                    }
+                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
                                 } else {
                                     string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
                                     string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                                 }
+//                                if unionValue.isNull {
+//                                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+//                                } else {
+//                                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
+//                                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+//                                }
                             } else {
                                 indentLevel(level + 2)
                                 string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
@@ -732,12 +872,24 @@ private extension Coolie.Value {
                         }
                     } else {
                         indentLevel(level + 2)
-                        if value.isNull {
-                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+                        if case .null(let optionalValue) = value {
+                            let type: String
+                            if let value = optionalValue {
+                                type = "\(value.type)"
+                            } else {
+                                type = "UnknownType"
+                            }
+                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
                         } else {
                             string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
                             string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
+//                        if value.isNull {
+//                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? UnknownType\n"
+//                        } else {
+//                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
+//                            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+//                        }
                     }
                 }
             }

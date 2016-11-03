@@ -9,12 +9,24 @@
       "C on Linux"
     ],
     "motto": "爱你所爱，恨你所恨。",
-    "daily_fantasy_hours": [-0.1, 3.5, 4.2]
+    "daily_fantasy_hours": [4, 3.5, -4.2]
   },
   "projects": [
     {
       "name": "Coolie",
-      "url": "https://github.com/nixzhu/Coolie"
+      "url": "https://github.com/nixzhu/Coolie",
+      "more": {
+        "design": "xxx",
+        "code": "yyy"
+      }
+    },
+    {
+      "name": null,
+      "url": "https://github.com/nixzhu/X",
+      "more": {
+        "design": null,
+        "code": "zzz"
+      }
     }
   ]
 }
