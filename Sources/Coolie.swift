@@ -28,10 +28,10 @@ final public class Coolie {
         }
         var string = ""
         switch type {
-        case .struct:
-            value.generateStruct(fromLevel: 0, withModelName: name, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
-        case .class:
-            value.generateClass(fromLevel: 0, withModelName: name, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
+        case .`struct`:
+            value.generateStruct(modelName: name, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
+        case .`class`:
+            value.generateClass(modelName: name, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
         }
         return string
     }
