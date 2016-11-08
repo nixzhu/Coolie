@@ -84,57 +84,28 @@ final public class Coolie {
     private func generateTokens() -> [Token] {
 
         func scanBeginObject() -> Token? {
-            if scanner.scanString("{", into: nil) {
-                return .beginObject("{")
-            }
-            return nil
+            return scanner.scanString("{", into: nil) ? .beginObject("{") : nil
         }
-
         func scanEndObject() -> Token? {
-            if scanner.scanString("}", into: nil) {
-                return .endObject("}")
-            }
-            return nil
+            return scanner.scanString("}", into: nil) ? .endObject("}") : nil
         }
-
         func scanBeginArray() -> Token? {
-            if scanner.scanString("[", into: nil) {
-                return .beginArray("[")
-            }
-            return nil
+            return scanner.scanString("[", into: nil) ? .beginArray("[") : nil
         }
-
         func scanEndArray() -> Token? {
-            if scanner.scanString("]", into: nil) {
-                return .endArray("]")
-            }
-            return nil
+            return scanner.scanString("]", into: nil) ? .endArray("]") : nil
         }
-
         func scanColon() -> Token? {
-            if scanner.scanString(":", into: nil) {
-                return .colon(":")
-            }
-            return nil
+            return scanner.scanString(":", into: nil) ? .colon(":") : nil
         }
-
         func scanComma() -> Token? {
-            if scanner.scanString(",", into: nil) {
-                return .comma(",")
-            }
-            return nil
+            return scanner.scanString(",", into: nil) ? .comma(",") : nil
         }
-
         func scanBool() -> Token? {
-            if scanner.scanString("true", into: nil) {
-                return .bool(true)
-            }
-            if scanner.scanString("false", into: nil) {
-                return .bool(false)
-            }
+            if scanner.scanString("true", into: nil) { return .bool(true) }
+            if scanner.scanString("false", into: nil) { return .bool(false) }
             return nil
         }
-
         func scanNumber() -> Token? {
             var string: NSString?
             if scanner.scanCharacters(from: numberScanningSet, into: &string) {
@@ -148,12 +119,9 @@ final public class Coolie {
             }
             return nil
         }
-
         func scanString() -> Token? {
+            if scanner.scanString("\"\"", into: nil) { return .string("") }
             var string: NSString?
-            if scanner.scanString("\"\"", into: nil) {
-                return .string("")
-            }
             if scanner.scanString("\"", into: nil) &&
                 scanner.scanCharacters(from: stringScanningSet, into: &string) &&
                 scanner.scanString("\"", into: nil) {
@@ -163,47 +131,23 @@ final public class Coolie {
             }
             return nil
         }
-
         func scanNull() -> Token? {
-            if scanner.scanString("null", into: nil) {
-                return .null
-            }
-            return nil
+            return scanner.scanString("null", into: nil) ? .null : nil
         }
 
         var tokens = [Token]()
         while !scanner.isAtEnd {
             let previousScanLocation = scanner.scanLocation
-            if let token = scanBeginObject() {
-                tokens.append(token)
-            }
-            if let token = scanEndObject() {
-                tokens.append(token)
-            }
-            if let token = scanBeginArray() {
-                tokens.append(token)
-            }
-            if let token = scanEndArray() {
-                tokens.append(token)
-            }
-            if let token = scanColon() {
-                tokens.append(token)
-            }
-            if let token = scanComma() {
-                tokens.append(token)
-            }
-            if let token = scanBool() {
-                tokens.append(token)
-            }
-            if let token = scanNumber() {
-                tokens.append(token)
-            }
-            if let token = scanString() {
-                tokens.append(token)
-            }
-            if let token = scanNull() {
-                tokens.append(token)
-            }
+            scanBeginObject().flatMap({ tokens.append($0) })
+            scanEndObject().flatMap({ tokens.append($0) })
+            scanBeginArray().flatMap({ tokens.append($0) })
+            scanEndArray().flatMap({ tokens.append($0) })
+            scanColon().flatMap({ tokens.append($0) })
+            scanComma().flatMap({ tokens.append($0) })
+            scanBool().flatMap({ tokens.append($0) })
+            scanNumber().flatMap({ tokens.append($0) })
+            scanString().flatMap({ tokens.append($0) })
+            scanNull().flatMap({ tokens.append($0) })
             let currentScanLocation = scanner.scanLocation
             guard currentScanLocation > previousScanLocation else {
                 print("Not found valid token")
