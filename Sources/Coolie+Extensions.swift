@@ -39,6 +39,15 @@ extension Coolie.Value {
 
 extension Coolie.Value {
 
+    func indent(with level: Int, into string: inout String) {
+        for _ in 0..<level {
+            string += "\t"
+        }
+    }
+}
+
+extension Coolie.Value {
+
     var isDictionaryOrArray: Bool {
         switch self {
         case .dictionary:

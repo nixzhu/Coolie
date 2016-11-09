@@ -10,15 +10,6 @@ import Foundation
 
 extension Coolie.Value {
 
-    fileprivate func indent(with level: Int, into string: inout String) {
-        for _ in 0..<level {
-            string += "\t"
-        }
-    }
-}
-
-extension Coolie.Value {
-
     func generateStruct(fromLevel level: Int = 0, modelName: String? = nil, argumentLabel: String? = nil, constructorName: String? = nil, jsonDictionaryName: String? = nil, debug: Bool, into string: inout String) {
         let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
         switch self {
@@ -31,7 +22,7 @@ extension Coolie.Value {
             // properties
             for key in info.keys.sorted() {
                 let value = info[key]
-                value?.declareProperty(for: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, argumentLabel: argumentLabel, debug: debug, level: level + 1, into: &string)
+                value?.declareStructProperty(for: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, argumentLabel: argumentLabel, debug: debug, level: level + 1, into: &string)
             }
             // generate method
             indent(with: level + 1, into: &string)
@@ -44,7 +35,7 @@ extension Coolie.Value {
             let trueArgumentLabel = argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
                 let value = info[key]
-                value?.generateProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level, into: &string)
+                value?.generateStructProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level, into: &string)
             }
             if let _ = constructorName {
                 indent(with: level + 2, into: &string)
@@ -89,7 +80,7 @@ extension Coolie.Value {
 
 extension Coolie.Value {
 
-    func declareProperty(for key: String, jsonDictionaryName: String, constructorName: String?, argumentLabel: String?, debug: Bool, level: Int, into string: inout String) {
+    func declareStructProperty(for key: String, jsonDictionaryName: String, constructorName: String?, argumentLabel: String?, debug: Bool, level: Int, into string: inout String) {
         if isDictionaryOrArray {
             generateStruct(fromLevel: level, modelName: key.capitalized, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
             indent(with: level, into: &string)
@@ -127,19 +118,19 @@ extension Coolie.Value {
 
 extension Coolie.Value {
 
-    func generateProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
+    func generateStructProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
         if isDictionaryOrArray {
             if isDictionary {
-                generateDictionaryProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level + 2, into: &string)
+                generateStructDictionaryProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level + 2, into: &string)
             } else if isArray {
-                generateArrayProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level + 2, into: &string)
+                generateStructArrayProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level + 2, into: &string)
             }
         } else {
-            generateOrdinaryProperty(with: key, debug: debug, level: level + 2, into: &string)
+            generateStructOrdinaryProperty(with: key, debug: debug, level: level + 2, into: &string)
         }
     }
 
-    private func generateDictionaryProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
+    private func generateStructDictionaryProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
         indent(with: level, into: &string)
         string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
         string += debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
@@ -152,7 +143,7 @@ extension Coolie.Value {
         string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
     }
 
-    private func generateArrayProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
+    private func generateStructArrayProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
         guard case .array(_, let values) = self else { fatalError("value is not array") }
         if let unionValue = unionValues(values) {
             if case .null(let optionalValue) = unionValue {
@@ -168,7 +159,7 @@ extension Coolie.Value {
                             string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
                         }
                     } else {
-                        value.generateOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
+                        value.generateStructOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
                     }
                 } else {
                     indent(with: level, into: &string)
@@ -187,7 +178,7 @@ extension Coolie.Value {
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                     }
                 } else {
-                    unionValue.generateOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
+                    unionValue.generateStructOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
                 }
             }
         } else { // no union value
@@ -195,7 +186,7 @@ extension Coolie.Value {
         }
     }
 
-    private func generateOrdinaryProperty(with key: String, debug: Bool, level: Int, into string: inout String) {
+    private func generateStructOrdinaryProperty(with key: String, debug: Bool, level: Int, into string: inout String) {
         if case .null(let optionalValue) = self {
             indent(with: level, into: &string)
             let type: String
