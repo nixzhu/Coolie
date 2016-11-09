@@ -20,18 +20,13 @@ extension Coolie.Value {
 extension Coolie.Value {
 
     func generateStruct(fromLevel level: Int = 0, modelName: String? = nil, argumentLabel: String? = nil, constructorName: String? = nil, jsonDictionaryName: String? = nil, debug: Bool, into string: inout String) {
-        func indentLevel(_ level: Int) {
-            for _ in 0..<level {
-                string += "\t"
-            }
-        }
         let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
         switch self {
         case .bool, .number, .string, .url, .null:
             break
         case .dictionary(let info):
             // struct name
-            indentLevel(level)
+            indent(with: level, into: &string)
             string += "struct \(modelName ?? "Model") {\n"
             // properties
             for key in info.keys.sorted() {
@@ -39,7 +34,7 @@ extension Coolie.Value {
                 value?.declareProperty(for: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, argumentLabel: argumentLabel, debug: debug, level: level + 1, into: &string)
             }
             // generate method
-            indentLevel(level + 1)
+            indent(with: level + 1, into: &string)
             let initArgumentLabel = argumentLabel ?? "_"
             if let constructorName = constructorName {
                 string += "static func \(constructorName)(\(initArgumentLabel) info: \(jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
@@ -52,7 +47,7 @@ extension Coolie.Value {
                 value?.generateProperty(with: key, jsonDictionaryName: jsonDictionaryName, constructorName: constructorName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level, into: &string)
             }
             if let _ = constructorName {
-                indentLevel(level + 2)
+                indent(with: level + 2, into: &string)
                 string += "return \(modelName ?? "Model")("
                 let lastIndex = info.keys.count - 1
                 for (index, key) in info.keys.sorted().enumerated() {
@@ -62,14 +57,14 @@ extension Coolie.Value {
                 string += "\n"
             } else {
                 for key in info.keys.sorted() {
-                    indentLevel(level + 2)
+                    indent(with: level + 2, into: &string)
                     let property = key.coolie_lowerCamelCase
                     string += "self.\(property) = \(property)\n"
                 }
             }
-            indentLevel(level + 1)
+            indent(with: level + 1, into: &string)
             string += "}\n"
-            indentLevel(level)
+            indent(with: level, into: &string)
             string += "}\n"
         case .array(let name, let values):
             if let unionValue = unionValues(values) {
