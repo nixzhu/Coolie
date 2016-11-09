@@ -18,7 +18,7 @@ extension Coolie.Value {
         }
         let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
         switch self {
-        case .bool, .number, .string, .null:
+        case .bool, .number, .string, .url, .null:
             break
         case .dictionary(let info):
             // struct name

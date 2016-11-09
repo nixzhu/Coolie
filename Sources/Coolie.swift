@@ -61,6 +61,7 @@ final public class Coolie {
         }
         case number(NumberType)
         case string(String)
+        case url(URL)
         indirect case null(Value?)
         indirect case dictionary([String: Value])
         indirect case array(name: String?, values: [Value])
