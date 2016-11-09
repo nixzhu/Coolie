@@ -30,72 +30,8 @@ extension Coolie.Value {
             string += "init?(\(initArgumentLabel) info: \(jsonDictionaryName)) {\n"
             let trueArgumentLabel = argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
-                if let value = info[key] {
-                    if value.isDictionaryOrArray {
-                        if value.isDictionary {
-                            indent(with: level + 2, into: &string)
-                            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
-                            string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
-                            indent(with: level + 2, into: &string)
-                            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
-                            string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
-                        } else if value.isArray {
-                            if case .array(_, let values) = value, let unionValue = unionValues(values) {
-                                if case .null(let optionalValue) = unionValue {
-                                    if let value = optionalValue {
-                                        if value.isDictionary {
-                                            indent(with: level + 2, into: &string)
-                                            string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)?] else { "
-                                            string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                            indent(with: level + 2, into: &string)
-                                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
-                                        } else {
-                                            indent(with: level + 2, into: &string)
-                                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(value.type)?] else { "
-                                            string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                        }
-                                    } else {
-                                        indent(with: level + 2, into: &string)
-                                        let type = "UnknownType"
-                                        string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-                                    }
-                                } else {
-                                    if unionValue.isDictionary {
-                                        indent(with: level + 2, into: &string)
-                                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
-                                        string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                        indent(with: level + 2, into: &string)
-                                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
-                                    } else {
-                                        indent(with: level + 2, into: &string)
-                                        string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-                                        string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                    }
-                                }
-                            } else {
-                                indent(with: level + 2, into: &string)
-                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
-                                string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                indent(with: level + 2, into: &string)
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
-                            }
-                        }
-                    } else {
-                        indent(with: level + 2, into: &string)
-                        if case .null(let optionalValue) = value {
-                            let type: String
-                            if let value = optionalValue {
-                                type = "\(value.type)"
-                            } else {
-                                type = "UnknownType"
-                            }
-                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-                        } else {
-                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(value.type) else { "
-                            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
-                        }
-                    }
-                }
+                let value = info[key]
+                value?.generateClassProperty(with: key, jsonDictionaryName: jsonDictionaryName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level + 2, into: &string)
             }
             for key in info.keys.sorted() {
                 indent(with: level + 2, into: &string)
@@ -161,6 +97,76 @@ extension Coolie.Value {
         } else {
             indent(with: level, into: &string)
             string += "var \(key.coolie_lowerCamelCase): \(type)\n"
+        }
+    }
+}
+
+extension Coolie.Value {
+
+    func generateClassProperty(with key: String, jsonDictionaryName: String, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
+        if isDictionaryOrArray {
+            if isDictionary {
+                indent(with: level, into: &string)
+                string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
+                string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
+                indent(with: level, into: &string)
+                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+            } else if isArray {
+                if case .array(_, let values) = self, let unionValue = unionValues(values) {
+                    if case .null(let optionalValue) = unionValue {
+                        if let value = optionalValue {
+                            if value.isDictionary {
+                                indent(with: level, into: &string)
+                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)?] else { "
+                                string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                                indent(with: level, into: &string)
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
+                            } else {
+                                indent(with: level, into: &string)
+                                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(value.type)?] else { "
+                                string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                            }
+                        } else {
+                            indent(with: level, into: &string)
+                            let type = "UnknownType"
+                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+                        }
+                    } else {
+                        if unionValue.isDictionary {
+                            indent(with: level, into: &string)
+                            string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
+                            string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                            indent(with: level, into: &string)
+                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                        } else {
+                            indent(with: level, into: &string)
+                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
+                            string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                        }
+                    }
+                } else {
+                    indent(with: level, into: &string)
+                    string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
+                    string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                    indent(with: level, into: &string)
+                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                }
+            }
+        } else {
+            indent(with: level, into: &string)
+            if case .null(let optionalValue) = self {
+                let type: String
+                if let value = optionalValue {
+                    type = "\(value.type)"
+                } else {
+                    type = "UnknownType"
+                }
+                string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+            } else {
+                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
+                string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+            }
         }
     }
 }
