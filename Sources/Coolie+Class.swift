@@ -106,67 +106,72 @@ extension Coolie.Value {
     func generateClassProperty(with key: String, jsonDictionaryName: String, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
         if isDictionaryOrArray {
             if isDictionary {
-                indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
-                string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
-                indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
-                string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+                generateClassDictionaryProperty(with: key, jsonDictionaryName: jsonDictionaryName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level, into: &string)
             } else if isArray {
-                if case .array(_, let values) = self, let unionValue = unionValues(values) {
-                    if case .null(let optionalValue) = unionValue {
-                        if let value = optionalValue {
-                            if value.isDictionary {
-                                indent(with: level, into: &string)
-                                string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)?] else { "
-                                string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                                indent(with: level, into: &string)
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
-                            } else {
-                                indent(with: level, into: &string)
-                                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(value.type)?] else { "
-                                string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                            }
-                        } else {
-                            indent(with: level, into: &string)
-                            let type = "UnknownType"
-                            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-                        }
+                generateClassArrayProperty(with: key, jsonDictionaryName: jsonDictionaryName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level, into: &string)
+            }
+        } else {
+            generateClassOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
+        }
+    }
+
+    private func generateClassDictionaryProperty(with key: String, jsonDictionaryName: String, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
+        indent(with: level, into: &string)
+        string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
+        string += debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
+        indent(with: level, into: &string)
+        string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+        string += debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+    }
+
+    private func generateClassArrayProperty(with key: String, jsonDictionaryName: String, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
+        guard case .array(_, let values) = self else { fatalError("value is not array") }
+        if let unionValue = unionValues(values) {
+            if case .null(let optionalValue) = unionValue {
+                if let value = optionalValue {
+                    if value.isDictionary {
+                        indent(with: level, into: &string)
+                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)?] else { "
+                        string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                        indent(with: level, into: &string)
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
                     } else {
-                        if unionValue.isDictionary {
-                            indent(with: level, into: &string)
-                            string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
-                            string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                            indent(with: level, into: &string)
-                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
-                        } else {
-                            indent(with: level, into: &string)
-                            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(unionValue.type)] else { "
-                            string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
-                        }
+                        value.generateClassOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
                     }
                 } else {
+                    indent(with: level, into: &string)
+                    let type = "UnknownType"
+                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+                }
+            } else {
+                if unionValue.isDictionary {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
                     string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                     indent(with: level, into: &string)
                     string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
-                }
-            }
-        } else {
-            indent(with: level, into: &string)
-            if case .null(let optionalValue) = self {
-                let type: String
-                if let value = optionalValue {
-                    type = "\(value.type)"
                 } else {
-                    type = "UnknownType"
+                    unionValue.generateClassOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
                 }
-                string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-            } else {
-                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
-                string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
             }
+        } else { // no union value
+            // do nothing
+        }
+    }
+
+    private func generateClassOrdinaryProperty(with key: String, debug: Bool, level: Int, into string: inout String) {
+        indent(with: level, into: &string)
+        if case .null(let optionalValue) = self {
+            let type: String
+            if let value = optionalValue {
+                type = "\(value.type)"
+            } else {
+                type = "UnknownType"
+            }
+            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+        } else {
+            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
+            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
         }
     }
 }
