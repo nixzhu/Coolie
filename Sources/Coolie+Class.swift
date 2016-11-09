@@ -21,40 +21,8 @@ extension Coolie.Value {
             string += "class \(modelName ?? "Model") {\n"
             // properties
             for key in info.keys.sorted() {
-                if let value = info[key] {
-                    if value.isDictionaryOrArray {
-                        value.generateClass(fromLevel: level + 1, modelName: key.capitalized, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
-                        indent(with: level + 1, into: &string)
-                        if value.isArray {
-                            if case .array(_, let values) = value, let unionValue = unionValues(values) {
-                                if case .null(let optionalValue) = unionValue {
-                                    if let _value = optionalValue {
-                                        if _value.isDictionary {
-                                            string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]\n"
-                                        } else {
-                                            string += "var \(key.coolie_lowerCamelCase): [\(_value.type)?]\n"
-                                        }
-                                    } else {
-                                        string += "var \(key.coolie_lowerCamelCase): [UnknowType?]\n"
-                                    }
-                                } else {
-                                    if unionValue.isDictionary {
-                                        string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
-                                    } else {
-                                        string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
-                                    }
-                                }
-                            } else {
-                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
-                            }
-                        } else {
-                            string += "var \(key.coolie_lowerCamelCase): \(key.capitalized)\n"
-                        }
-                    } else {
-                        indent(with: level + 1, into: &string)
-                        string += "var \(key.coolie_lowerCamelCase): \(value.type)\n"
-                    }
-                }
+                let value = info[key]
+                value?.declareClassProperty(for: key, jsonDictionaryName: jsonDictionaryName, argumentLabel: argumentLabel, debug: debug, level: level + 1, into: &string)
             }
             // generate method
             indent(with: level + 1, into: &string)
@@ -155,6 +123,44 @@ extension Coolie.Value {
                     }
                 }
             }
+        }
+    }
+}
+
+extension Coolie.Value {
+
+    func declareClassProperty(for key: String, jsonDictionaryName: String, argumentLabel: String?, debug: Bool, level: Int, into string: inout String) {
+        if isDictionaryOrArray {
+            generateClass(fromLevel: level, modelName: key.capitalized, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
+            indent(with: level, into: &string)
+            if isArray {
+                if case .array(_, let values) = self, let unionValue = unionValues(values) {
+                    if case .null(let optionalValue) = unionValue {
+                        if let _value = optionalValue {
+                            if _value.isDictionary {
+                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]\n"
+                            } else {
+                                string += "var \(key.coolie_lowerCamelCase): [\(_value.type)?]\n"
+                            }
+                        } else {
+                            string += "var \(key.coolie_lowerCamelCase): [UnknowType?]\n"
+                        }
+                    } else {
+                        if unionValue.isDictionary {
+                            string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
+                        } else {
+                            string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
+                        }
+                    }
+                } else {
+                    string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
+                }
+            } else {
+                string += "var \(key.coolie_lowerCamelCase): \(key.capitalized)\n"
+            }
+        } else {
+            indent(with: level, into: &string)
+            string += "var \(key.coolie_lowerCamelCase): \(type)\n"
         }
     }
 }
