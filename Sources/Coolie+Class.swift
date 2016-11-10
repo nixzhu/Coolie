@@ -164,14 +164,22 @@ extension Coolie.Value {
         switch _type {
         case .normal:
             if case .null(let optionalValue) = self {
-                indent(with: level, into: &string)
-                let type: String
                 if let value = optionalValue {
-                    type = "\(value.type)"
+                    if value.isHyperString {
+                        indent(with: level, into: &string)
+                        string += "let \(key.coolie_lowerCamelCase)String = info[\"\(key)\"] as? String\n"
+                        indent(with: level, into: &string)
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ URL(string: $0) })\n"
+                    } else {
+                        indent(with: level, into: &string)
+                        let type = "\(value.type)"
+                        string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+                    }
                 } else {
-                    type = "UnknownType"
+                    indent(with: level, into: &string)
+                    let type = "UnknownType"
+                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
                 }
-                string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
             } else {
                 if isHyperString {
                     indent(with: level, into: &string)
