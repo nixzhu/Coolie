@@ -9,10 +9,9 @@
       "C on Linux"
     ],
     "motto": "爱你所爱，恨你所恨。",
-    "daily_fantasy_hours": [4, 3.5, -4.2],
-    "dreams": [null, "Love", null, "Hate"],
-    "websites": ["https://apple.com"],
-    "workspaces": ["https://apple.com", null],
+    "latest_feelings": [4, 3.5, -4.2],
+    "latest_dreams": [null, "Love", null, "Hate"],
+    "favorite_websites": ["https://google.com", "https://www.apple.com"],
     "twitter": "https://twitter.com/nixzhu"
   },
   "experiences": [
@@ -37,10 +36,10 @@
     null,
     {
       "name": null,
-      "url": "https://github.com/nixzhu/XProject",
+      "url": null,
       "more": {
         "design": null,
-        "code": "unknown"
+        "code": null
       }
     }
   ]

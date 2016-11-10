@@ -27,8 +27,10 @@ Swift 3.0
       "C on Linux"
     ],
     "motto": "爱你所爱，恨你所恨。",
-    "daily_fantasy_hours": [4, 3.5, -4.2],
-    "dreams": [null, "Love", null, "Hate"]
+    "latest_feelings": [4, 3.5, -4.2],
+    "latest_dreams": [null, "Love", null, "Hate"],
+    "favorite_websites": ["https://google.com", "https://www.apple.com"],
+    "twitter": "https://twitter.com/nixzhu"
   },
   "experiences": [
     {
@@ -52,10 +54,10 @@ Swift 3.0
     null,
     {
       "name": null,
-      "url": "https://github.com/nixzhu/XProject",
+      "url": null,
       "more": {
         "design": null,
-        "code": "unknown"
+        "code": null
       }
     }
   ]
@@ -75,27 +77,35 @@ It will generate:
 struct User {
 	struct Detail {
 		let age: Int
-		let dailyFantasyHours: [Double]
-		let dreams: [String?]
+		let favoriteWebsites: [URL]
 		let gender: UnknownType?
 		let isDogLover: Bool
+		let latestDreams: [String?]
+		let latestFeelings: [Double]
 		let motto: String
 		let skills: [String]
+		let twitter: URL
 		init?(json info: [String: Any]) {
 			guard let age = info["age"] as? Int else { return nil }
-			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
-			guard let dreams = info["dreams"] as? [String?] else { return nil }
+			guard let favoriteWebsitesStrings = info["favorite_websites"] as? [String] else { return nil }
+			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
+			guard let latestDreams = info["latest_dreams"] as? [String?] else { return nil }
+			guard let latestFeelings = info["latest_feelings"] as? [Double] else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
+			guard let twitterString = info["twitter"] as? String else { return nil }
+			guard let twitter = URL(string: twitterString) else { return nil }
 			self.age = age
-			self.dailyFantasyHours = dailyFantasyHours
-			self.dreams = dreams
+			self.favoriteWebsites = favoriteWebsites
 			self.gender = gender
 			self.isDogLover = isDogLover
+			self.latestDreams = latestDreams
+			self.latestFeelings = latestFeelings
 			self.motto = motto
 			self.skills = skills
+			self.twitter = twitter
 		}
 	}
 	let detail: Detail
@@ -113,10 +123,10 @@ struct User {
 	let name: String
 	struct Project {
 		struct More {
-			let code: String
+			let code: String?
 			let design: String?
 			init?(json info: [String: Any]) {
-				guard let code = info["code"] as? String else { return nil }
+				let code = info["code"] as? String
 				let design = info["design"] as? String
 				self.code = code
 				self.design = design
@@ -124,12 +134,12 @@ struct User {
 		}
 		let more: More
 		let name: String?
-		let url: String
+		let url: URL?
 		init?(json info: [String: Any]) {
 			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
 			guard let more = More(json: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
-			guard let url = info["url"] as? String else { return nil }
+			let url = info["url"] as? URL
 			self.more = more
 			self.name = name
 			self.url = url
@@ -168,21 +178,27 @@ It will generate:
 struct User {
 	struct Detail {
 		let age: Int
-		let dailyFantasyHours: [Double]
-		let dreams: [String?]
+		let favoriteWebsites: [URL]
 		let gender: UnknownType?
 		let isDogLover: Bool
+		let latestDreams: [String?]
+		let latestFeelings: [Double]
 		let motto: String
 		let skills: [String]
+		let twitter: URL
 		static func create(with info: JSONDictionary) -> Detail? {
 			guard let age = info["age"] as? Int else { return nil }
-			guard let dailyFantasyHours = info["daily_fantasy_hours"] as? [Double] else { return nil }
-			guard let dreams = info["dreams"] as? [String?] else { return nil }
+			guard let favoriteWebsitesStrings = info["favorite_websites"] as? [String] else { return nil }
+			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
 			let gender = info["gender"] as? UnknownType
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
+			guard let latestDreams = info["latest_dreams"] as? [String?] else { return nil }
+			guard let latestFeelings = info["latest_feelings"] as? [Double] else { return nil }
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
-			return Detail(age: age, dailyFantasyHours: dailyFantasyHours, dreams: dreams, gender: gender, isDogLover: isDogLover, motto: motto, skills: skills)
+			guard let twitterString = info["twitter"] as? String else { return nil }
+			guard let twitter = URL(string: twitterString) else { return nil }
+			return Detail(age: age, favoriteWebsites: favoriteWebsites, gender: gender, isDogLover: isDogLover, latestDreams: latestDreams, latestFeelings: latestFeelings, motto: motto, skills: skills, twitter: twitter)
 		}
 	}
 	let detail: Detail
@@ -199,22 +215,22 @@ struct User {
 	let name: String
 	struct Project {
 		struct More {
-			let code: String
+			let code: String?
 			let design: String?
 			static func create(with info: JSONDictionary) -> More? {
-				guard let code = info["code"] as? String else { return nil }
+				let code = info["code"] as? String
 				let design = info["design"] as? String
 				return More(code: code, design: design)
 			}
 		}
 		let more: More
 		let name: String?
-		let url: String
+		let url: URL?
 		static func create(with info: JSONDictionary) -> Project? {
 			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
 			guard let more = More.create(with: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
-			guard let url = info["url"] as? String else { return nil }
+			let url = info["url"] as? URL
 			return Project(more: more, name: name, url: url)
 		}
 	}
