@@ -204,38 +204,4 @@ extension Coolie.Value {
             string += debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
         }
     }
-
-    /*
-    private func generateClassOrdinaryProperty(with key: String, debug: Bool, level: Int, into string: inout String) {
-        indent(with: level, into: &string)
-        if case .null(let optionalValue) = self {
-            let type: String
-            if let value = optionalValue {
-                type = "\(value.type)"
-            } else {
-                type = "UnknownType"
-            }
-            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
-        } else {
-            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
-            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
-        }
-    }
-
-    private func generateClassOrdinaryPropertyInArray(with key: String, debug: Bool, level: Int, into string: inout String) {
-        indent(with: level, into: &string)
-        if case .null(let optionalValue) = self {
-            let type: String
-            if let value = optionalValue {
-                type = "\(value.type)"
-            } else {
-                type = "UnknownType"
-            }
-            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)]\n"
-        } else {
-            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)] else { "
-            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
-        }
-    }
-     */
 }
