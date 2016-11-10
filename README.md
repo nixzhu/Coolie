@@ -139,7 +139,8 @@ struct User {
 			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
 			guard let more = More(json: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
-			let url = info["url"] as? URL
+			let urlString = info["url"] as? String
+			let url = urlString.flatMap({ URL(string: $0) })
 			self.more = more
 			self.name = name
 			self.url = url
@@ -230,7 +231,8 @@ struct User {
 			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
 			guard let more = More.create(with: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
-			let url = info["url"] as? URL
+			let urlString = info["url"] as? String
+			let url = urlString.flatMap({ URL(string: $0) })
 			return Project(more: more, name: name, url: url)
 		}
 	}
