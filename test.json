@@ -10,7 +10,8 @@
     ],
     "motto": "爱你所爱，恨你所恨。",
     "daily_fantasy_hours": [4, 3.5, -4.2],
-    "dreams": [null, "Love", null, "Hate"]
+    "dreams": [null, "Love", null, "Hate"],
+    "websites": ["https://apple.com"]
   },
   "experiences": [
     {

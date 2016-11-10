@@ -111,7 +111,7 @@ extension Coolie.Value {
                 generateClassArrayProperty(with: key, jsonDictionaryName: jsonDictionaryName, trueArgumentLabel: trueArgumentLabel, debug: debug, level: level, into: &string)
             }
         } else {
-            generateClassOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
+            generateClassOrdinaryProperty(of: .normal, with: key, debug: debug, level: level, into: &string)
         }
     }
 
@@ -136,7 +136,7 @@ extension Coolie.Value {
                         indent(with: level, into: &string)
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
                     } else {
-                        value.generateClassOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
+                        value.generateClassOrdinaryProperty(of: .optionalInArray, with: key, debug: debug, level: level, into: &string)
                     }
                 } else {
                     indent(with: level, into: &string)
@@ -151,7 +151,7 @@ extension Coolie.Value {
                     indent(with: level, into: &string)
                     string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                 } else {
-                    unionValue.generateClassOrdinaryProperty(with: key, debug: debug, level: level, into: &string)
+                    unionValue.generateClassOrdinaryProperty(of: .normalInArray, with: key, debug: debug, level: level, into: &string)
                 }
             }
         } else { // no union value
@@ -159,6 +159,53 @@ extension Coolie.Value {
         }
     }
 
+    private func generateClassOrdinaryProperty(of _type: OrdinaryPropertyType, with key: String, debug: Bool, level: Int, into string: inout String) {
+
+        switch _type {
+        case .normal:
+            if case .null(let optionalValue) = self {
+                indent(with: level, into: &string)
+                let type: String
+                if let value = optionalValue {
+                    type = "\(value.type)"
+                } else {
+                    type = "UnknownType"
+                }
+                string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+            } else {
+                if isHyperString {
+                    indent(with: level, into: &string)
+                    string += "guard let \(key.coolie_lowerCamelCase)String = info[\"\(key)\"] as? String else { "
+                    string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                    indent(with: level, into: &string)
+                    string += "guard let \(key.coolie_lowerCamelCase) = URL(string: \(key.coolie_lowerCamelCase)String) else { "
+                    string += debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
+                } else {
+                    indent(with: level, into: &string)
+                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
+                    string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                }
+            }
+        case .normalInArray:
+            if isHyperString {
+                indent(with: level, into: &string)
+                string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String] else { "
+                string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                indent(with: level, into: &string)
+                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ URL(string: $0) }).flatMap({ $0 })"
+            } else {
+                indent(with: level, into: &string)
+                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)] else { "
+                string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+            }
+        case .optionalInArray:
+            indent(with: level, into: &string)
+            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)?] else { "
+            string += debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
+        }
+    }
+
+    /*
     private func generateClassOrdinaryProperty(with key: String, debug: Bool, level: Int, into string: inout String) {
         indent(with: level, into: &string)
         if case .null(let optionalValue) = self {
@@ -174,4 +221,21 @@ extension Coolie.Value {
             string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
         }
     }
+
+    private func generateClassOrdinaryPropertyInArray(with key: String, debug: Bool, level: Int, into string: inout String) {
+        indent(with: level, into: &string)
+        if case .null(let optionalValue) = self {
+            let type: String
+            if let value = optionalValue {
+                type = "\(value.type)"
+            } else {
+                type = "UnknownType"
+            }
+            string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)]\n"
+        } else {
+            string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)] else { "
+            string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+        }
+    }
+     */
 }

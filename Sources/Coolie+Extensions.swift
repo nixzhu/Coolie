@@ -44,6 +44,12 @@ extension Coolie.Value {
             string += "\t"
         }
     }
+
+    enum OrdinaryPropertyType {
+        case normal
+        case normalInArray
+        case optionalInArray
+    }
 }
 
 extension Coolie.Value {
