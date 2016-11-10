@@ -104,6 +104,32 @@ extension Coolie.Value {
 
 extension Coolie.Value {
 
+    var upgraded: Coolie.Value {
+        switch self {
+        case .bool, .number, .url, .null:
+            return self
+        case .string(let string):
+            if let url = URL(string: string), url.host != nil {
+                return .url(url)
+            } else {
+                return self
+            }
+        case .dictionary(let info):
+            var newInfo: [String: Coolie.Value] = [:]
+            for key in info.keys {
+                let value = info[key]!
+                newInfo[key] = value.upgraded
+            }
+            return .dictionary(newInfo)
+        case .array(let name, let values):
+            let newValues = values.map({ $0.upgraded })
+            return .array(name: name, values: newValues)
+        }
+    }
+}
+
+extension Coolie.Value {
+
     private func union(_ otherValue: Coolie.Value) -> Coolie.Value {
         switch (self, otherValue) {
         case (.null(let aOptionalValue), .null(let bOptionalValue)):
@@ -139,14 +165,11 @@ extension Coolie.Value {
                 return .number(.double(1.0))
             }
         case (.string(let s1), .string(let s2)):
-            if let url = URL(string: s1), url.host != nil {
-                return .url(url)
-            } else if let url = URL(string: s2), url.host != nil {
-                return .url(url)
-            } else {
-                let string = s1.isEmpty ? s2 : s1
-                return .string(string)
-            }
+            let string = s1.isEmpty ? s2 : s1
+            return .string(string)
+        case (.url(let u1), .url(let u2)):
+            let url = u1.host == nil ? u2 : u1
+            return .url(url)
         case (.dictionary(let aInfo), .dictionary(let bInfo)):
             var info = aInfo
             for key in aInfo.keys {

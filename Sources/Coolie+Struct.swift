@@ -219,7 +219,7 @@ extension Coolie.Value {
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String] else { "
                 string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
-                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ URL(string: $0) }).flatMap({ $0 })"
+                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ URL(string: $0) }).flatMap({ $0 })\n"
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)] else { "
@@ -231,7 +231,7 @@ extension Coolie.Value {
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String?] else { "
                 string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
-                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ URL(string: $0) })"
+                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ URL(string: $0) }) })\n"
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)?] else { "

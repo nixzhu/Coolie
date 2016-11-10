@@ -22,7 +22,7 @@ final public class Coolie {
     }
 
     public func generateModel(name: String, type: ModelType, argumentLabel: String? = nil, constructorName: String? = nil, jsonDictionaryName: String? = nil, debug: Bool = false) -> String? {
-        guard let value = parse() else {
+        guard let value = parse()?.upgraded else {
             print("Coolie parse failed!")
             return nil
         }
