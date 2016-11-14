@@ -1,8 +1,7 @@
 {
   "name": "NIX",
-  "created_at": "1989-06-04T02:50:51.644000Z",
   "detail": {
-    "age": 18,
+    "birthday": "1987-10-04",
     "gender": null,
     "is_dog_lover": true,
     "skills": [
@@ -29,6 +28,7 @@
     {
       "name": "Coolie",
       "url": "https://github.com/nixzhu/Coolie",
+      "created_at": "1989-06-04T02:50:51.644000Z",
       "more": {
         "design": "nixzhu",
         "code": "nixzhu"
@@ -38,6 +38,7 @@
     {
       "name": null,
       "url": null,
+      "created_at": null,
       "more": {
         "design": null,
         "code": null

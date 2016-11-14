@@ -69,6 +69,8 @@ extension Coolie.Value {
                             switch type {
                             case .jsonLike:
                                 string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ jsonLikeDateFormater.date(from: $0) })\n"
+                            case .dateOnly:
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ dateOnlyDateFormater.date(from: $0) })\n"
                             }
                         default:
                             fatalError("")
@@ -98,6 +100,9 @@ extension Coolie.Value {
                         case .jsonLike:
                             string += "guard let \(key.coolie_lowerCamelCase) = jsonLikeDateFormater.date(from: \(key.coolie_lowerCamelCase)String) else { "
                             string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                        case .dateOnly:
+                            string += "guard let \(key.coolie_lowerCamelCase) = dateOnlyDateFormater.date(from: \(key.coolie_lowerCamelCase)String) else { "
+                            string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
                     default:
                         fatalError("")
@@ -121,6 +126,8 @@ extension Coolie.Value {
                     switch type {
                     case .jsonLike:
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ jsonLikeDateFormater.date(from: $0) }).flatMap({ $0 })\n"
+                    case .dateOnly:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ dateOnlyDateFormater.date(from: $0) }).flatMap({ $0 })\n"
                     }
                 default:
                     fatalError("")
@@ -143,6 +150,8 @@ extension Coolie.Value {
                     switch type {
                     case .jsonLike:
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ jsonLikeDateFormater.date(from: $0) }) })\n"
+                    case .dateOnly:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ dateOnlyDateFormater.date(from: $0) }) })\n"
                     }
                 default:
                     fatalError("")
@@ -214,11 +223,20 @@ let jsonLikeDateFormater: DateFormatter = {
     return formater
 }()
 
+let dateOnlyDateFormater: DateFormatter = {
+    let formater = DateFormatter()
+    formater.dateFormat = "yyyy-MM-dd"
+    return formater
+}()
+
 extension String {
 
     var dateType: Coolie.Value.DateType? {
         if jsonLikeDateFormater.date(from: self) != nil {
             return .jsonLike
+        }
+        if dateOnlyDateFormater.date(from: self) != nil {
+            return .dateOnly
         }
         return nil
     }
@@ -294,6 +312,8 @@ extension Coolie.Value {
         case (.url(let u1), .url(let u2)):
             let url = u1.host == nil ? u2 : u1
             return .url(url)
+        case (.date(let d1), .date):
+            return .date(d1)
         case (.dictionary(let aInfo), .dictionary(let bInfo)):
             var info = aInfo
             for key in aInfo.keys {

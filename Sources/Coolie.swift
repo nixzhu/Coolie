@@ -65,6 +65,7 @@ final public class Coolie {
         case url(URL)
         public enum DateType {
             case jsonLike
+            case dateOnly
         }
         case date(DateType)
         indirect case null(Value?)
