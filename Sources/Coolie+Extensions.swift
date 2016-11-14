@@ -68,9 +68,9 @@ extension Coolie.Value {
                         case .date(let type):
                             switch type {
                             case .jsonLike:
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ jsonLikeDateFormater.date(from: $0) })\n"
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.jsonLike).date(from: $0) })\n"
                             case .dateOnly:
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ dateOnlyDateFormater.date(from: $0) })\n"
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) })\n"
                             }
                         default:
                             fatalError("")
@@ -98,10 +98,10 @@ extension Coolie.Value {
                     case .date(let type):
                         switch type {
                         case .jsonLike:
-                            string += "guard let \(key.coolie_lowerCamelCase) = jsonLikeDateFormater.date(from: \(key.coolie_lowerCamelCase)String) else { "
+                            string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.jsonLike).date(from: \(key.coolie_lowerCamelCase)String) else { "
                             string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         case .dateOnly:
-                            string += "guard let \(key.coolie_lowerCamelCase) = dateOnlyDateFormater.date(from: \(key.coolie_lowerCamelCase)String) else { "
+                            string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.dateOnly).date(from: \(key.coolie_lowerCamelCase)String) else { "
                             string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
                     default:
@@ -125,9 +125,9 @@ extension Coolie.Value {
                 case .date(let type):
                     switch type {
                     case .jsonLike:
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ jsonLikeDateFormater.date(from: $0) }).flatMap({ $0 })\n"
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ \(Config.DateFormatterName.jsonLike).date(from: $0) }).flatMap({ $0 })\n"
                     case .dateOnly:
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ dateOnlyDateFormater.date(from: $0) }).flatMap({ $0 })\n"
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ \(Config.DateFormatterName.dateOnly).date(from: $0) }).flatMap({ $0 })\n"
                     }
                 default:
                     fatalError("")
@@ -149,9 +149,9 @@ extension Coolie.Value {
                 case .date(let type):
                     switch type {
                     case .jsonLike:
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ jsonLikeDateFormater.date(from: $0) }) })\n"
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ \(Config.DateFormatterName.jsonLike).date(from: $0) }) })\n"
                     case .dateOnly:
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ dateOnlyDateFormater.date(from: $0) }) })\n"
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) }) })\n"
                     }
                 default:
                     fatalError("")
@@ -217,25 +217,13 @@ extension Coolie.Value {
     }
 }
 
-let jsonLikeDateFormater: DateFormatter = {
-    let formater = DateFormatter()
-    formater.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
-    return formater
-}()
-
-let dateOnlyDateFormater: DateFormatter = {
-    let formater = DateFormatter()
-    formater.dateFormat = "yyyy-MM-dd"
-    return formater
-}()
-
 extension String {
 
     var dateType: Coolie.Value.DateType? {
-        if jsonLikeDateFormater.date(from: self) != nil {
+        if jsonLikeDateFormatter.date(from: self) != nil {
             return .jsonLike
         }
-        if dateOnlyDateFormater.date(from: self) != nil {
+        if dateOnlyDateFormatter.date(from: self) != nil {
             return .dateOnly
         }
         return nil
