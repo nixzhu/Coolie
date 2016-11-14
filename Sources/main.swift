@@ -60,6 +60,16 @@ func main(_ arguments: [String]) {
     let modelTypeRawValue = arguments.valueOfOption(modelTypeOption)?.lowercased()
     let modelType = modelTypeRawValue.flatMap({ Coolie.ModelType(rawValue: $0) }) ?? Coolie.ModelType.struct
 
+    let jsonLikeDateFormatterNameOption = Arguments.Option.Long(key: "json-like-date-formatter-name")
+    if let jsonLikeDateFormatterName = arguments.valueOfOption(jsonLikeDateFormatterNameOption) {
+        Config.DateFormatterName.jsonLike = jsonLikeDateFormatterName
+    }
+
+    let dateOnlyDateFormatterNameOption = Arguments.Option.Long(key: "date-only-date-formatter-name")
+    if let dateOnlyDateFormatterName = arguments.valueOfOption(dateOnlyDateFormatterNameOption) {
+        Config.DateFormatterName.dateOnly = dateOnlyDateFormatterName
+    }
+
     let model = coolie.generateModel(
         name: modelName,
         type: modelType,

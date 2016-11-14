@@ -10,8 +10,8 @@ import Foundation
 
 class Config {
     class DateFormatterName {
-        static var jsonLike = "jsonLikeDateFormater"
-        static var dateOnly = "dateOnlyDateFormater"
+        static var jsonLike = "jsonLikeDateFormatter"
+        static var dateOnly = "dateOnlyDateFormatter"
     }
 }
 
