@@ -25,6 +25,8 @@ extension Coolie.Value {
             return "String"
         case .url:
             return "URL"
+        case .date:
+            return "Date"
         case .null(let value):
             if let value = value {
                 return "\(value.type)?"
@@ -60,7 +62,17 @@ extension Coolie.Value {
                         indent(with: level, into: &string)
                         string += "let \(key.coolie_lowerCamelCase)String = info[\"\(key)\"] as? String\n"
                         indent(with: level, into: &string)
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ URL(string: $0) })\n"
+                        switch value {
+                        case .url:
+                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ URL(string: $0) })\n"
+                        case .date(let type):
+                            switch type {
+                            case .jsonLike:
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ jsonLikeDateFormater.date(from: $0) })\n"
+                            }
+                        default:
+                            fatalError("")
+                        }
                     } else {
                         indent(with: level, into: &string)
                         let type = "\(value.type)"
@@ -77,8 +89,19 @@ extension Coolie.Value {
                     string += "guard let \(key.coolie_lowerCamelCase)String = info[\"\(key)\"] as? String else { "
                     string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase) = URL(string: \(key.coolie_lowerCamelCase)String) else { "
-                    string += debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
+                    switch self {
+                    case .url:
+                        string += "guard let \(key.coolie_lowerCamelCase) = URL(string: \(key.coolie_lowerCamelCase)String) else { "
+                        string += debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
+                    case .date(let type):
+                        switch type {
+                        case .jsonLike:
+                            string += "guard let \(key.coolie_lowerCamelCase) = jsonLikeDateFormater.date(from: \(key.coolie_lowerCamelCase)String) else { "
+                            string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                        }
+                    default:
+                        fatalError("")
+                    }
                 } else {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
@@ -91,7 +114,17 @@ extension Coolie.Value {
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String] else { "
                 string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
-                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ URL(string: $0) }).flatMap({ $0 })\n"
+                switch self {
+                case .url:
+                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ URL(string: $0) }).flatMap({ $0 })\n"
+                case .date(let type):
+                    switch type {
+                    case .jsonLike:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ jsonLikeDateFormater.date(from: $0) }).flatMap({ $0 })\n"
+                    }
+                default:
+                    fatalError("")
+                }
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)] else { "
@@ -103,7 +136,17 @@ extension Coolie.Value {
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String?] else { "
                 string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
-                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ URL(string: $0) }) })\n"
+                switch self {
+                case .url:
+                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ URL(string: $0) }) })\n"
+                case .date(let type):
+                    switch type {
+                    case .jsonLike:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ jsonLikeDateFormater.date(from: $0) }) })\n"
+                    }
+                default:
+                    fatalError("")
+                }
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)?] else { "
@@ -148,6 +191,8 @@ extension Coolie.Value {
         switch self {
         case .url:
             return true
+        case .date:
+            return true
         default:
             return false
         }
@@ -163,18 +208,36 @@ extension Coolie.Value {
     }
 }
 
+let jsonLikeDateFormater: DateFormatter = {
+    let formater = DateFormatter()
+    formater.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+    return formater
+}()
+
+extension String {
+
+    var dateType: Coolie.Value.DateType? {
+        if jsonLikeDateFormater.date(from: self) != nil {
+            return .jsonLike
+        }
+        return nil
+    }
+}
+
 extension Coolie.Value {
 
     var upgraded: Coolie.Value {
         switch self {
-        case .bool, .number, .url, .null:
+        case .bool, .number, .url, .date, .null:
             return self
         case .string(let string):
             if let url = URL(string: string), url.host != nil {
                 return .url(url)
-            } else {
-                return self
             }
+            if let dateType = string.dateType {
+                return .date(dateType)
+            }
+            return self
         case .dictionary(let info):
             var newInfo: [String: Coolie.Value] = [:]
             for key in info.keys {

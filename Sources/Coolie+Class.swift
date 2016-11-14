@@ -13,7 +13,7 @@ extension Coolie.Value {
     func generateClass(fromLevel level: Int = 0, modelName: String? = nil, argumentLabel: String? = nil, jsonDictionaryName: String? = nil, debug: Bool, into string: inout String) {
         let jsonDictionaryName = jsonDictionaryName ?? "[String: Any]"
         switch self {
-        case .bool, .number, .string, .url, .null:
+        case .bool, .number, .string, .url, .date, .null:
             break
         case .dictionary(let info):
             // struct name

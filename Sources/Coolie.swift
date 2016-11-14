@@ -61,7 +61,12 @@ final public class Coolie {
         }
         case number(NumberType)
         case string(String)
+        // hyper string
         case url(URL)
+        public enum DateType {
+            case jsonLike
+        }
+        case date(DateType)
         indirect case null(Value?)
         indirect case dictionary([String: Value])
         indirect case array(name: String?, values: [Value])
