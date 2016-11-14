@@ -19,7 +19,7 @@ Swift 3.0
 {
   "name": "NIX",
   "detail": {
-    "age": 18,
+    "birthday": "1987-10-04",
     "gender": null,
     "is_dog_lover": true,
     "skills": [
@@ -46,6 +46,7 @@ Swift 3.0
     {
       "name": "Coolie",
       "url": "https://github.com/nixzhu/Coolie",
+      "created_at": "2016-01-24T14:50:51.644000Z",
       "more": {
         "design": "nixzhu",
         "code": "nixzhu"
@@ -55,6 +56,7 @@ Swift 3.0
     {
       "name": null,
       "url": null,
+      "created_at": null,
       "more": {
         "design": null,
         "code": null
@@ -76,7 +78,7 @@ It will generate:
 ``` swift
 struct User {
 	struct Detail {
-		let age: Int
+		let birthday: Date
 		let favoriteWebsites: [URL]
 		let gender: UnknownType?
 		let isDogLover: Bool
@@ -86,7 +88,8 @@ struct User {
 		let skills: [String]
 		let twitter: URL
 		init?(json info: [String: Any]) {
-			guard let age = info["age"] as? Int else { return nil }
+			guard let birthdayString = info["birthday"] as? String else { return nil }
+			guard let birthday = dateOnlyDateFormatter.date(from: birthdayString) else { return nil }
 			guard let favoriteWebsitesStrings = info["favorite_websites"] as? [String] else { return nil }
 			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
 			let gender = info["gender"] as? UnknownType
@@ -97,7 +100,7 @@ struct User {
 			guard let skills = info["skills"] as? [String] else { return nil }
 			guard let twitterString = info["twitter"] as? String else { return nil }
 			guard let twitter = URL(string: twitterString) else { return nil }
-			self.age = age
+			self.birthday = birthday
 			self.favoriteWebsites = favoriteWebsites
 			self.gender = gender
 			self.isDogLover = isDogLover
@@ -122,6 +125,7 @@ struct User {
 	let experiences: [Experience]
 	let name: String
 	struct Project {
+		let createdAt: Date?
 		struct More {
 			let code: String?
 			let design: String?
@@ -136,11 +140,14 @@ struct User {
 		let name: String?
 		let url: URL?
 		init?(json info: [String: Any]) {
+			let createdAtString = info["created_at"] as? String
+			let createdAt = createdAtString.flatMap({ jsonLikeDateFormatter.date(from: $0) })
 			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
 			guard let more = More(json: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
 			let urlString = info["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
+			self.createdAt = createdAt
 			self.more = more
 			self.name = name
 			self.url = url
@@ -163,6 +170,24 @@ struct User {
 }
 ```
 
+You may need some date formatters:
+
+``` swift
+let jsonLikeDateFormatter: DateFormatter = {
+    let formater = DateFormatter()
+    formater.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+    return formater
+}()
+
+let dateOnlyDateFormatter: DateFormatter = {
+    let formater = DateFormatter()
+    formater.dateFormat = "yyyy-MM-dd"
+    return formater
+}()
+```
+
+Use `--json-like-date-formatter-name` or `--date-only-date-formatter-name` can set the name of date formatter.
+
 Pretty cool, ah?
 
 Now you can modify the models (the name of properties or their type) if you need.
@@ -178,7 +203,7 @@ It will generate:
 ``` swift
 struct User {
 	struct Detail {
-		let age: Int
+		let birthday: Date
 		let favoriteWebsites: [URL]
 		let gender: UnknownType?
 		let isDogLover: Bool
@@ -188,7 +213,8 @@ struct User {
 		let skills: [String]
 		let twitter: URL
 		static func create(with info: JSONDictionary) -> Detail? {
-			guard let age = info["age"] as? Int else { return nil }
+			guard let birthdayString = info["birthday"] as? String else { return nil }
+			guard let birthday = dateOnlyDateFormatter.date(from: birthdayString) else { return nil }
 			guard let favoriteWebsitesStrings = info["favorite_websites"] as? [String] else { return nil }
 			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
 			let gender = info["gender"] as? UnknownType
@@ -199,7 +225,7 @@ struct User {
 			guard let skills = info["skills"] as? [String] else { return nil }
 			guard let twitterString = info["twitter"] as? String else { return nil }
 			guard let twitter = URL(string: twitterString) else { return nil }
-			return Detail(age: age, favoriteWebsites: favoriteWebsites, gender: gender, isDogLover: isDogLover, latestDreams: latestDreams, latestFeelings: latestFeelings, motto: motto, skills: skills, twitter: twitter)
+			return Detail(birthday: birthday, favoriteWebsites: favoriteWebsites, gender: gender, isDogLover: isDogLover, latestDreams: latestDreams, latestFeelings: latestFeelings, motto: motto, skills: skills, twitter: twitter)
 		}
 	}
 	let detail: Detail
@@ -215,6 +241,7 @@ struct User {
 	let experiences: [Experience]
 	let name: String
 	struct Project {
+		let createdAt: Date?
 		struct More {
 			let code: String?
 			let design: String?
@@ -228,12 +255,14 @@ struct User {
 		let name: String?
 		let url: URL?
 		static func create(with info: JSONDictionary) -> Project? {
+			let createdAtString = info["created_at"] as? String
+			let createdAt = createdAtString.flatMap({ jsonLikeDateFormatter.date(from: $0) })
 			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
 			guard let more = More.create(with: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
 			let urlString = info["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
-			return Project(more: more, name: name, url: url)
+			return Project(createdAt: createdAt, more: more, name: name, url: url)
 		}
 	}
 	let projects: [Project?]
@@ -250,7 +279,7 @@ struct User {
 }
 ```
 
-You may need `typealias JSONDictionary = [String: Any]` at first.
+You may need `typealias JSONDictionary = [String: Any]`.
 
 If you need class model, use the following command:
 
