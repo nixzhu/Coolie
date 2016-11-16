@@ -67,8 +67,8 @@ extension Coolie.Value {
                             string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ URL(string: $0) })\n"
                         case .date(let type):
                             switch type {
-                            case .jsonLike:
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.jsonLike).date(from: $0) })\n"
+                            case .iso8601:
+                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.iso8601).date(from: $0) })\n"
                             case .dateOnly:
                                 string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) })\n"
                             }
@@ -97,8 +97,8 @@ extension Coolie.Value {
                         string += debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
                     case .date(let type):
                         switch type {
-                        case .jsonLike:
-                            string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.jsonLike).date(from: \(key.coolie_lowerCamelCase)String) else { "
+                        case .iso8601:
+                            string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.iso8601).date(from: \(key.coolie_lowerCamelCase)String) else { "
                             string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         case .dateOnly:
                             string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.dateOnly).date(from: \(key.coolie_lowerCamelCase)String) else { "
@@ -124,8 +124,8 @@ extension Coolie.Value {
                     string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ URL(string: $0) }).flatMap({ $0 })\n"
                 case .date(let type):
                     switch type {
-                    case .jsonLike:
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ \(Config.DateFormatterName.jsonLike).date(from: $0) }).flatMap({ $0 })\n"
+                    case .iso8601:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ \(Config.DateFormatterName.iso8601).date(from: $0) }).flatMap({ $0 })\n"
                     case .dateOnly:
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ \(Config.DateFormatterName.dateOnly).date(from: $0) }).flatMap({ $0 })\n"
                     }
@@ -148,8 +148,8 @@ extension Coolie.Value {
                     string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ URL(string: $0) }) })\n"
                 case .date(let type):
                     switch type {
-                    case .jsonLike:
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ \(Config.DateFormatterName.jsonLike).date(from: $0) }) })\n"
+                    case .iso8601:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ \(Config.DateFormatterName.iso8601).date(from: $0) }) })\n"
                     case .dateOnly:
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) }) })\n"
                     }
@@ -220,8 +220,8 @@ extension Coolie.Value {
 extension String {
 
     var dateType: Coolie.Value.DateType? {
-        if jsonLikeDateFormatter.date(from: self) != nil {
-            return .jsonLike
+        if iso8601DateFormatter.date(from: self) != nil {
+            return .iso8601
         }
         if dateOnlyDateFormatter.date(from: self) != nil {
             return .dateOnly

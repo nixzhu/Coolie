@@ -3,6 +3,8 @@
 
 Coolie parse a JSON file to generate models (& their constructors).
 
+苦力有很强的类型推断能力，除了能识别 URL 或常见 Date 类型，还能自动推断数组类型（并进行类型合并），你可从下面的例子看出细节。
+
 [Working with JSON in Swift](https://developer.apple.com/swift/blog/?id=37)
 
 中文介绍：[制作一个苦力](https://github.com/nixzhu/dev-blog/blob/master/2016-06-29-coolie.md)
@@ -141,7 +143,7 @@ struct User {
 		let url: URL?
 		init?(json info: [String: Any]) {
 			let createdAtString = info["created_at"] as? String
-			let createdAt = createdAtString.flatMap({ jsonLikeDateFormatter.date(from: $0) })
+			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
 			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
 			guard let more = More(json: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String
@@ -173,20 +175,22 @@ struct User {
 You may need some date formatters:
 
 ``` swift
-let jsonLikeDateFormatter: DateFormatter = {
-    let formater = DateFormatter()
-    formater.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
-    return formater
+let iso8601DateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.timeZone = TimeZone(abbreviation: "UTC")
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+    return formatter
 }()
 
 let dateOnlyDateFormatter: DateFormatter = {
-    let formater = DateFormatter()
-    formater.dateFormat = "yyyy-MM-dd"
-    return formater
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter
 }()
 ```
 
-Use `--json-like-date-formatter-name` or `--date-only-date-formatter-name` can set the name of date formatter.
+Use `--iso8601-date-formatter-name` or `--date-only-date-formatter-name` can set the name of the date formatter.
 
 Pretty cool, ah?
 
@@ -256,7 +260,7 @@ struct User {
 		let url: URL?
 		static func create(with info: JSONDictionary) -> Project? {
 			let createdAtString = info["created_at"] as? String
-			let createdAt = createdAtString.flatMap({ jsonLikeDateFormatter.date(from: $0) })
+			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
 			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
 			guard let more = More.create(with: moreJSONDictionary) else { return nil }
 			let name = info["name"] as? String

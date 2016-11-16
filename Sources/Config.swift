@@ -10,19 +10,21 @@ import Foundation
 
 class Config {
     class DateFormatterName {
-        static var jsonLike = "jsonLikeDateFormatter"
+        static var iso8601 = "iso8601DateFormatter"
         static var dateOnly = "dateOnlyDateFormatter"
     }
 }
 
-let jsonLikeDateFormatter: DateFormatter = {
-    let formater = DateFormatter()
-    formater.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
-    return formater
+let iso8601DateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.timeZone = TimeZone(abbreviation: "UTC")
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+    return formatter
 }()
 
 let dateOnlyDateFormatter: DateFormatter = {
-    let formater = DateFormatter()
-    formater.dateFormat = "yyyy-MM-dd"
-    return formater
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter
 }()

@@ -64,7 +64,7 @@ final public class Coolie {
         // hyper string
         case url(URL)
         public enum DateType {
-            case jsonLike
+            case iso8601
             case dateOnly
         }
         case date(DateType)
