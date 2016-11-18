@@ -41,9 +41,13 @@ extension Coolie.Value {
                 indent(with: level + 2, into: &string)
                 string += "return \(modelName ?? "Model")("
                 let lastIndex = info.keys.count - 1
-                for (index, key) in info.keys.sorted().enumerated() {
-                    let suffix = (index == lastIndex) ? ")" : ", "
-                    string += "\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix
+                if info.keys.isEmpty {
+                    string += ")"
+                } else {
+                    for (index, key) in info.keys.sorted().enumerated() {
+                        let suffix = (index == lastIndex) ? ")" : ", "
+                        string += "\(key.coolie_lowerCamelCase): \(key.coolie_lowerCamelCase)" + suffix
+                    }
                 }
                 string += "\n"
             } else {
