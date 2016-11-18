@@ -23,6 +23,7 @@ Swift 3.0
   "detail": {
     "birthday": "1987-10-04",
     "gender": null,
+    "loves": [],
     "is_dog_lover": true,
     "skills": [
       "Swift on iOS",
@@ -49,19 +50,18 @@ Swift 3.0
       "name": "Coolie",
       "url": "https://github.com/nixzhu/Coolie",
       "created_at": "2016-01-24T14:50:51.644000Z",
+      "bytes": [1, 2, 3],
       "more": {
         "design": "nixzhu",
-        "code": "nixzhu"
+        "code": "nixzhu",
+        "comments": ["init", "tokens", "parse"]
       }
     },
     null,
     {
       "name": null,
-      "url": null,
-      "created_at": null,
+      "bytes": [],
       "more": {
-        "design": null,
-        "code": null
       }
     }
   ]
@@ -86,6 +86,11 @@ struct User {
 		let isDogLover: Bool
 		let latestDreams: [String?]
 		let latestFeelings: [Double]
+		struct Love {
+			init?(json info: [String: Any]) {
+			}
+		}
+		let loves: [Love]
 		let motto: String
 		let skills: [String]
 		let twitter: URL
@@ -98,6 +103,8 @@ struct User {
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let latestDreams = info["latest_dreams"] as? [String?] else { return nil }
 			guard let latestFeelings = info["latest_feelings"] as? [Double] else { return nil }
+			guard let lovesJSONArray = info["loves"] as? [[String: Any]] else { return nil }
+			let loves = lovesJSONArray.map({ Love(json: $0) }).flatMap({ $0 })
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
 			guard let twitterString = info["twitter"] as? String else { return nil }
@@ -108,6 +115,7 @@ struct User {
 			self.isDogLover = isDogLover
 			self.latestDreams = latestDreams
 			self.latestFeelings = latestFeelings
+			self.loves = loves
 			self.motto = motto
 			self.skills = skills
 			self.twitter = twitter
@@ -127,14 +135,18 @@ struct User {
 	let experiences: [Experience]
 	let name: String
 	struct Project {
+		let bytes: [Int]
 		let createdAt: Date?
 		struct More {
 			let code: String?
+			let comments: [String]?
 			let design: String?
 			init?(json info: [String: Any]) {
 				let code = info["code"] as? String
+				let comments = info["comments"] as? [String]
 				let design = info["design"] as? String
 				self.code = code
+				self.comments = comments
 				self.design = design
 			}
 		}
@@ -142,6 +154,7 @@ struct User {
 		let name: String?
 		let url: URL?
 		init?(json info: [String: Any]) {
+			guard let bytes = info["bytes"] as? [Int] else { return nil }
 			let createdAtString = info["created_at"] as? String
 			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
 			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
@@ -149,6 +162,7 @@ struct User {
 			let name = info["name"] as? String
 			let urlString = info["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
+			self.bytes = bytes
 			self.createdAt = createdAt
 			self.more = more
 			self.name = name
@@ -213,6 +227,12 @@ struct User {
 		let isDogLover: Bool
 		let latestDreams: [String?]
 		let latestFeelings: [Double]
+		struct Love {
+			static func create(with info: JSONDictionary) -> Love? {
+				return Love()
+			}
+		}
+		let loves: [Love]
 		let motto: String
 		let skills: [String]
 		let twitter: URL
@@ -225,11 +245,13 @@ struct User {
 			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
 			guard let latestDreams = info["latest_dreams"] as? [String?] else { return nil }
 			guard let latestFeelings = info["latest_feelings"] as? [Double] else { return nil }
+			guard let lovesJSONArray = info["loves"] as? [JSONDictionary] else { return nil }
+			let loves = lovesJSONArray.map({ Love.create(with: $0) }).flatMap({ $0 })
 			guard let motto = info["motto"] as? String else { return nil }
 			guard let skills = info["skills"] as? [String] else { return nil }
 			guard let twitterString = info["twitter"] as? String else { return nil }
 			guard let twitter = URL(string: twitterString) else { return nil }
-			return Detail(birthday: birthday, favoriteWebsites: favoriteWebsites, gender: gender, isDogLover: isDogLover, latestDreams: latestDreams, latestFeelings: latestFeelings, motto: motto, skills: skills, twitter: twitter)
+			return Detail(birthday: birthday, favoriteWebsites: favoriteWebsites, gender: gender, isDogLover: isDogLover, latestDreams: latestDreams, latestFeelings: latestFeelings, loves: loves, motto: motto, skills: skills, twitter: twitter)
 		}
 	}
 	let detail: Detail
@@ -245,20 +267,24 @@ struct User {
 	let experiences: [Experience]
 	let name: String
 	struct Project {
+		let bytes: [Int]
 		let createdAt: Date?
 		struct More {
 			let code: String?
+			let comments: [String]?
 			let design: String?
 			static func create(with info: JSONDictionary) -> More? {
 				let code = info["code"] as? String
+				let comments = info["comments"] as? [String]
 				let design = info["design"] as? String
-				return More(code: code, design: design)
+				return More(code: code, comments: comments, design: design)
 			}
 		}
 		let more: More
 		let name: String?
 		let url: URL?
 		static func create(with info: JSONDictionary) -> Project? {
+			guard let bytes = info["bytes"] as? [Int] else { return nil }
 			let createdAtString = info["created_at"] as? String
 			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
 			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
@@ -266,7 +292,7 @@ struct User {
 			let name = info["name"] as? String
 			let urlString = info["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
-			return Project(createdAt: createdAt, more: more, name: name, url: url)
+			return Project(bytes: bytes, createdAt: createdAt, more: more, name: name, url: url)
 		}
 	}
 	let projects: [Project?]
