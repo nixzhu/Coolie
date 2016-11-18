@@ -33,6 +33,12 @@ extension Coolie.Value {
             } else {
                 return "UnknownType?"
             }
+        case .array(_, let values):
+            if let unionValue = unionValues(values) {
+                return "[\(unionValue.type)]"
+            } else {
+                return "UnknownType"
+            }
         default:
             fatalError("no type for: \(self)")
         }
