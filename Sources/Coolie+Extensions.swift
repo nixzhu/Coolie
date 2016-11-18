@@ -338,7 +338,7 @@ extension Coolie.Value {
         if let first = values.first {
             return values.dropFirst().reduce(first, { $0.union($1) })
         } else {
-            return nil
+            return .dictionary([:])
         }
     }
 }
