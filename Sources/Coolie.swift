@@ -142,6 +142,12 @@ final public class Coolie {
             return scanner.scanString("null", into: nil) ? .null : nil
         }
 
+        func lineNumber(location: Int) -> Int {
+            let string = scanner.string as NSString
+            let subString = string.substring(to: location)
+            return subString.characters.filter({ $0 == "\n" }).count
+        }
+
         var tokens = [Token]()
         while !scanner.isAtEnd {
             let previousScanLocation = scanner.scanLocation
@@ -157,7 +163,7 @@ final public class Coolie {
             scanNull().flatMap({ tokens.append($0) })
             let currentScanLocation = scanner.scanLocation
             guard currentScanLocation > previousScanLocation else {
-                print("Not found valid token")
+                print("Not found valid token at line: \(lineNumber(location: currentScanLocation))")
                 break
             }
         }
@@ -255,7 +261,7 @@ final public class Coolie {
             } else {
                 while true {
                     guard let key = parseString(), let _ = parseColon(), let value = parseValue() else {
-                        print("Expect key : value")
+                        print("Expect `key : value`, token: \(tokens[next])")
                         break
                     }
                     if case .string(let key) = key {
