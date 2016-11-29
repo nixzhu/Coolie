@@ -125,7 +125,7 @@ extension Coolie.Value {
     }
 
     private func generateClassArrayProperty(with key: String, jsonDictionaryName: String, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
-        guard case .array(_, let values) = self else { fatalError("value is not array") }
+        guard case .array(_, let values) = self else { fatalError("Value is not array") }
         if let unionValue = unionValues(values) {
             if case .null(let optionalValue) = unionValue {
                 if let value = optionalValue {

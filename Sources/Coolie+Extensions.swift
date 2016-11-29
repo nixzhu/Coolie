@@ -40,7 +40,7 @@ extension Coolie.Value {
                 return "UnknownType"
             }
         default:
-            fatalError("no type for: \(self)")
+            fatalError("No type for: \(self)")
         }
     }
 }
@@ -79,7 +79,7 @@ extension Coolie.Value {
                                 string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) })\n"
                             }
                         default:
-                            fatalError("")
+                            fatalError("Unknown hyper string")
                         }
                     } else {
                         indent(with: level, into: &string)
@@ -111,7 +111,7 @@ extension Coolie.Value {
                             string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
                     default:
-                        fatalError("")
+                        fatalError("Unknown hyper string")
                     }
                 } else {
                     indent(with: level, into: &string)
@@ -136,7 +136,7 @@ extension Coolie.Value {
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ \(Config.DateFormatterName.dateOnly).date(from: $0) }).flatMap({ $0 })\n"
                     }
                 default:
-                    fatalError("")
+                    fatalError("Unknown hyper string")
                 }
             } else {
                 indent(with: level, into: &string)
@@ -160,7 +160,7 @@ extension Coolie.Value {
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)Strings.map({ $0.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) }) })\n"
                     }
                 default:
-                    fatalError("")
+                    fatalError("Unknown hyper string")
                 }
             } else {
                 indent(with: level, into: &string)
@@ -311,7 +311,7 @@ extension Coolie.Value {
         case (.dictionary(let aInfo), .dictionary(let bInfo)):
             var info = aInfo
             for key in aInfo.keys {
-                guard let aValue = aInfo[key] else { fatalError() }
+                let aValue = aInfo[key]!
                 if let bValue = bInfo[key] {
                     info[key] = aValue.union(bValue)
                 } else {
@@ -319,7 +319,7 @@ extension Coolie.Value {
                 }
             }
             for key in bInfo.keys {
-                guard let bValue = bInfo[key] else { fatalError() }
+                let bValue = bInfo[key]!
                 if let aValue = aInfo[key] {
                     info[key] = bValue.union(aValue)
                 } else {

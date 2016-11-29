@@ -70,7 +70,7 @@ extension Coolie.Value {
                             value.generateStruct(fromLevel: level, modelName: name?.coolie_dropLastCharacter, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
                         }
                     } else {
-                        fatalError("empty array")
+                        fatalError("Empty array")
                     }
                 } else {
                     if unionValue.isDictionaryOrArray {
@@ -148,7 +148,7 @@ extension Coolie.Value {
     }
 
     private func generateStructArrayProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
-        guard case .array(_, let values) = self else { fatalError("value is not array") }
+        guard case .array(_, let values) = self else { fatalError("Value is not array") }
         if let unionValue = unionValues(values) {
             if case .null(let optionalValue) = unionValue {
                 if let value = optionalValue {
