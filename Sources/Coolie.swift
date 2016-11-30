@@ -62,15 +62,9 @@ final public class Coolie {
             let components = subString.components(separatedBy: "\n")
             guard !components.isEmpty else { return "[line \(1)]" }
             let fullComponents = string.components(separatedBy: "\n")
-            let lastIndex = components.count - 1
-            let lineNumber: Int
-            if components[lastIndex] == fullComponents[lastIndex] {
-                lineNumber = lastIndex + 1
-            } else {
-                lineNumber = lastIndex + 1
-            }
+            let lineNumber = components.count
             let line = fullComponents[lineNumber - 1]
-            return "[line \(lineNumber): `\(line)`]"
+            return "#line \(lineNumber): `\(line)`#"
         }
 
         init(_ location: Int) {
@@ -206,7 +200,7 @@ final public class Coolie {
 
         func parseValue() -> Value? {
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseValue: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseValue: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             switch token {
@@ -240,7 +234,7 @@ final public class Coolie {
 
         func parseArray(name: String? = nil) -> Value? {
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseArray: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseArray: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             var array = [Value]()
@@ -263,7 +257,7 @@ final public class Coolie {
                                 break
                             }
                             guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndArray else {
-                                print("Invalid JSON, comma at end of array: \(tokenLocations[next].description(in: scanner))")
+                                print("Invalid JSON, comma at end of array: \(tokenLocations[next >= 1 ? next - 1 : next].description(in: scanner))")
                                 break
                             }
                         }
@@ -275,7 +269,7 @@ final public class Coolie {
 
         func parseObject() -> Value? {
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseObject: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseObject: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             var dictionary = [String: Value]()
@@ -285,7 +279,7 @@ final public class Coolie {
             } else {
                 while true {
                     guard let key = parseString(), let _ = parseColon(), let value = parseValue() else {
-                        print("Expect `key : value`: \(tokenLocations[next].description(in: scanner))")
+                        print("Expect `key : value`: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                         break
                     }
                     if case .string(let key) = key {
@@ -297,11 +291,11 @@ final public class Coolie {
                             return .dictionary(dictionary)
                         } else {
                             guard let _ = parseComma() else {
-                                print("Expect comma: \(tokenLocations[next >= 2 ? next - 2 : next].description(in: scanner))")
+                                print("Expect comma: \(tokenLocations[coolie_safe: next - 2].flatMap({ $0.description(in: scanner) }) ?? "none")")
                                 break
                             }
                             guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndObject else {
-                                print("Invalid JSON, comma at end of object: \(tokenLocations[next >= 1 ? next - 1 : next].description(in: scanner))")
+                                print("Invalid JSON, comma at end of object: \(tokenLocations[coolie_safe: next - 1].flatMap({ $0.description(in: scanner) }) ?? "none")")
                                 break
                             }
                         }
@@ -316,7 +310,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseColon: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseColon: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             if case .colon(let string) = token {
@@ -330,7 +324,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseComma: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseComma: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             if case .comma(let string) = token {
@@ -344,7 +338,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseBool: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseBool: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             if case .bool(let bool) = token {
@@ -358,7 +352,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseNumber: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseNumber: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             if case .number(let number) = token {
@@ -377,7 +371,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseString: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseString: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             if case .string(let string) = token {
@@ -391,7 +385,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseNull: \(tokenLocations[next].description(in: scanner))")
+                print("No token for parseNull: \(tokenLocations[coolie_safe: next].flatMap({ $0.description(in: scanner) }) ?? "none")")
                 return nil
             }
             if case .null = token {
