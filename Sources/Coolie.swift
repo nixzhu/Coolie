@@ -53,6 +53,14 @@ final public class Coolie {
         case null                   // null
     }
 
+    fileprivate struct TokenLocation {
+        let location: Int
+
+        init(_ location: Int) {
+            self.location = location
+        }
+    }
+
     public enum Value {
         case bool(Bool)
         public enum NumberType {
@@ -88,7 +96,13 @@ final public class Coolie {
         return symbolSet
     }()
 
-    private func generateTokens() -> [Token] {
+    private func lineNumber(of location: Int) -> Int {
+        let string = scanner.string as NSString
+        let subString = string.substring(to: location)
+        return subString.characters.filter({ $0 == "\n" }).count
+    }
+
+    private func generateTokens() -> ([Token], [TokenLocation]) {
 
         func scanBeginObject() -> Token? {
             return scanner.scanString("{", into: nil) ? .beginObject("{") : nil
@@ -142,37 +156,36 @@ final public class Coolie {
             return scanner.scanString("null", into: nil) ? .null : nil
         }
 
-        func lineNumber(location: Int) -> Int {
-            let string = scanner.string as NSString
-            let subString = string.substring(to: location)
-            return subString.characters.filter({ $0 == "\n" }).count
-        }
-
         var tokens = [Token]()
+        var tokenLocations = [TokenLocation]()
+        func appendToken(_ token: Token) {
+            tokens.append(token)
+            tokenLocations.append(TokenLocation(scanner.scanLocation))
+        }
         while !scanner.isAtEnd {
             let previousScanLocation = scanner.scanLocation
-            scanBeginObject().flatMap({ tokens.append($0) })
-            scanEndObject().flatMap({ tokens.append($0) })
-            scanBeginArray().flatMap({ tokens.append($0) })
-            scanEndArray().flatMap({ tokens.append($0) })
-            scanColon().flatMap({ tokens.append($0) })
-            scanComma().flatMap({ tokens.append($0) })
-            scanBool().flatMap({ tokens.append($0) })
-            scanNumber().flatMap({ tokens.append($0) })
-            scanString().flatMap({ tokens.append($0) })
-            scanNull().flatMap({ tokens.append($0) })
+            scanBeginObject().flatMap({ appendToken($0) })
+            scanEndObject().flatMap({ appendToken($0) })
+            scanBeginArray().flatMap({ appendToken($0) })
+            scanEndArray().flatMap({ appendToken($0) })
+            scanColon().flatMap({ appendToken($0) })
+            scanComma().flatMap({ appendToken($0) })
+            scanBool().flatMap({ appendToken($0) })
+            scanNumber().flatMap({ appendToken($0) })
+            scanString().flatMap({ appendToken($0) })
+            scanNull().flatMap({ appendToken($0) })
             let currentScanLocation = scanner.scanLocation
             guard currentScanLocation > previousScanLocation else {
-                print("Not found valid token at line: \(lineNumber(location: currentScanLocation))")
+                print("Not found valid token: [\(lineNumber(of: currentScanLocation))]")
                 break
             }
         }
-        return tokens
+        return (tokens, tokenLocations)
     }
 
     private func parse() -> Value? {
 
-        let tokens = generateTokens()
+        let (tokens, tokenLocations) = generateTokens()
         guard !tokens.isEmpty else {
             print("No tokens")
             return nil
@@ -182,7 +195,7 @@ final public class Coolie {
 
         func parseValue() -> Value? {
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseValue")
+                print("No token for parseValue: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             switch token {
@@ -216,7 +229,7 @@ final public class Coolie {
 
         func parseArray(name: String? = nil) -> Value? {
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseArray")
+                print("No token for parseArray: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             var array = [Value]()
@@ -235,11 +248,11 @@ final public class Coolie {
                             return .array(name: name, values: array)
                         } else {
                             guard let _ = parseComma() else {
-                                print("Expect comma")
+                                print("Expect comma: [\(lineNumber(of: tokenLocations[next].location))]")
                                 break
                             }
                             guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndArray else {
-                                print("Invalid JSON, comma at end of array")
+                                print("Invalid JSON, comma at end of array: [\(lineNumber(of: tokenLocations[next].location))]")
                                 break
                             }
                         }
@@ -251,7 +264,7 @@ final public class Coolie {
 
         func parseObject() -> Value? {
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseObject")
+                print("No token for parseObject: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             var dictionary = [String: Value]()
@@ -261,7 +274,7 @@ final public class Coolie {
             } else {
                 while true {
                     guard let key = parseString(), let _ = parseColon(), let value = parseValue() else {
-                        print("Expect `key : value`, token: \(tokens[next])")
+                        print("Expect `key : value`: [\(lineNumber(of: tokenLocations[next].location))]")
                         break
                     }
                     if case .string(let key) = key {
@@ -273,11 +286,11 @@ final public class Coolie {
                             return .dictionary(dictionary)
                         } else {
                             guard let _ = parseComma() else {
-                                print("Expect comma")
+                                print("Expect comma: [\(lineNumber(of: tokenLocations[next].location))]")
                                 break
                             }
                             guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndObject else {
-                                print("Invalid JSON, comma at end of object")
+                                print("Invalid JSON, comma at end of object: [\(lineNumber(of: tokenLocations[next].location))]")
                                 break
                             }
                         }
@@ -292,7 +305,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseColon")
+                print("No token for parseColon: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             if case .colon(let string) = token {
@@ -306,7 +319,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseComma")
+                print("No token for parseComma: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             if case .comma(let string) = token {
@@ -320,7 +333,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseBool")
+                print("No token for parseBool: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             if case .bool(let bool) = token {
@@ -334,7 +347,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseNumber")
+                print("No token for parseNumber: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             if case .number(let number) = token {
@@ -353,7 +366,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseString")
+                print("No token for parseString: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             if case .string(let string) = token {
@@ -367,7 +380,7 @@ final public class Coolie {
                 next += 1
             }
             guard let token = tokens[coolie_safe: next] else {
-                print("No token for parseNull")
+                print("No token for parseNull: [\(lineNumber(of: tokenLocations[next].location))]")
                 return nil
             }
             if case .null = token {
