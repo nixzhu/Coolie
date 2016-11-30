@@ -253,11 +253,11 @@ final public class Coolie {
                             return .array(name: name, values: array)
                         } else {
                             guard let _ = parseComma() else {
-                                print("Expect comma: \(tokenLocations[next >= 2 ? next - 2 : next].description(in: scanner))")
+                                print("Expect comma: \(tokenLocations[coolie_safe: next - 2].flatMap({ $0.description(in: scanner) }) ?? "none")")
                                 break
                             }
                             guard let nextToken = tokens[coolie_safe: next], nextToken.isNotEndArray else {
-                                print("Invalid JSON, comma at end of array: \(tokenLocations[next >= 1 ? next - 1 : next].description(in: scanner))")
+                                print("Invalid JSON, comma at end of array: \(tokenLocations[coolie_safe: next - 1].flatMap({ $0.description(in: scanner) }) ?? "none")")
                                 break
                             }
                         }
