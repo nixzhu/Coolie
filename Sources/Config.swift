@@ -9,6 +9,8 @@
 import Foundation
 
 class Config {
+    static var argumentLabel: String?
+
     class DateFormatterName {
         static var iso8601 = "iso8601DateFormatter"
         static var dateOnly = "dateOnlyDateFormatter"
@@ -28,3 +30,15 @@ let dateOnlyDateFormatter: DateFormatter = {
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter
 }()
+
+func defaultDictionaryName() -> String {
+    return "json"
+}
+
+func dictionaryName() -> String {
+    if let argumentLabel = Config.argumentLabel {
+        return argumentLabel
+    } else {
+        return defaultDictionaryName()
+    }
+}

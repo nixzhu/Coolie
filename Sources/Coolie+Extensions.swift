@@ -66,7 +66,7 @@ extension Coolie.Value {
                 if let value = optionalValue {
                     if value.isHyperString {
                         indent(with: level, into: &string)
-                        string += "let \(key.coolie_lowerCamelCase)String = info[\"\(key)\"] as? String\n"
+                        string += "let \(key.coolie_lowerCamelCase)String = \(dictionaryName())[\"\(key)\"] as? String\n"
                         indent(with: level, into: &string)
                         switch value {
                         case .url:
@@ -84,17 +84,17 @@ extension Coolie.Value {
                     } else {
                         indent(with: level, into: &string)
                         let type = "\(value.type)"
-                        string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+                        string += "let \(key.coolie_lowerCamelCase) = \(dictionaryName())[\"\(key)\"] as? \(type)\n"
                     }
                 } else {
                     indent(with: level, into: &string)
                     let type = "UnknownType"
-                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+                    string += "let \(key.coolie_lowerCamelCase) = \(dictionaryName())[\"\(key)\"] as? \(type)\n"
                 }
             } else {
                 if isHyperString {
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase)String = info[\"\(key)\"] as? String else { "
+                    string += "guard let \(key.coolie_lowerCamelCase)String = \(dictionaryName())[\"\(key)\"] as? String else { "
                     string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                     indent(with: level, into: &string)
                     switch self {
@@ -115,14 +115,14 @@ extension Coolie.Value {
                     }
                 } else {
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type) else { "
+                    string += "guard let \(key.coolie_lowerCamelCase) = \(dictionaryName())[\"\(key)\"] as? \(type) else { "
                     string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
                 }
             }
         case .normalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String] else { "
+                string += "guard let \(key.coolie_lowerCamelCase)Strings = \(dictionaryName())[\"\(key)\"] as? [String] else { "
                 string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
                 switch self {
@@ -140,13 +140,13 @@ extension Coolie.Value {
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)] else { "
+                string += "guard let \(key.coolie_lowerCamelCase) = \(dictionaryName())[\"\(key)\"] as? [\(type)] else { "
                 string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
             }
         case .optionalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase)Strings = info[\"\(key)\"] as? [String?] else { "
+                string += "guard let \(key.coolie_lowerCamelCase)Strings = \(dictionaryName())[\"\(key)\"] as? [String?] else { "
                 string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
                 switch self {
@@ -164,7 +164,7 @@ extension Coolie.Value {
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? [\(type)?] else { "
+                string += "guard let \(key.coolie_lowerCamelCase) = \(dictionaryName())[\"\(key)\"] as? [\(type)?] else { "
                 string += debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
             }
         }

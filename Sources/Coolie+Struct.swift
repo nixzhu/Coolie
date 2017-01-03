@@ -26,11 +26,17 @@ extension Coolie.Value {
             }
             // generate method
             indent(with: level + 1, into: &string)
-            let initArgumentLabel = argumentLabel ?? "_"
-            if let constructorName = constructorName {
-                string += "static func \(constructorName)(\(initArgumentLabel) info: \(jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
+
+            let initArgumentLabel: String
+            if let argumentLabel = argumentLabel {
+                initArgumentLabel = argumentLabel
             } else {
-                string += "init?(\(initArgumentLabel) info: \(jsonDictionaryName)) {\n"
+                initArgumentLabel = "_ \(defaultDictionaryName())"
+            }
+            if let constructorName = constructorName {
+                string += "static func \(constructorName)(\(initArgumentLabel): \(jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
+            } else {
+                string += "init?(\(initArgumentLabel): \(jsonDictionaryName)) {\n"
             }
             let trueArgumentLabel = argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
@@ -136,7 +142,7 @@ extension Coolie.Value {
 
     private func generateStructDictionaryProperty(with key: String, jsonDictionaryName: String, constructorName: String?, trueArgumentLabel: String, debug: Bool, level: Int, into string: inout String) {
         indent(with: level, into: &string)
-        string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = info[\"\(key)\"] as? \(jsonDictionaryName) else { "
+        string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(dictionaryName())[\"\(key)\"] as? \(jsonDictionaryName) else { "
         string += debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
         indent(with: level, into: &string)
         if let constructorName = constructorName {
@@ -154,7 +160,7 @@ extension Coolie.Value {
                 if let value = optionalValue {
                     if value.isDictionary {
                         indent(with: level, into: &string)
-                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)?] else { "
+                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(dictionaryName())[\"\(key)\"] as? [\(jsonDictionaryName)?] else { "
                         string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                         indent(with: level, into: &string)
                         if let constructorName = constructorName {
@@ -168,12 +174,12 @@ extension Coolie.Value {
                 } else {
                     indent(with: level, into: &string)
                     let type = "UnknownType"
-                    string += "let \(key.coolie_lowerCamelCase) = info[\"\(key)\"] as? \(type)\n"
+                    string += "let \(key.coolie_lowerCamelCase) = \(dictionaryName())[\"\(key)\"] as? \(type)\n"
                 }
             } else {
                 if unionValue.isDictionary {
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase)JSONArray = info[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
+                    string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(dictionaryName())[\"\(key)\"] as? [\(jsonDictionaryName)] else { "
                     string += debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
                     indent(with: level, into: &string)
                     if let constructorName = constructorName {

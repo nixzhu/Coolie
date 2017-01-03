@@ -45,7 +45,7 @@ func main(_ arguments: [String]) {
     let coolie = Coolie(jsonString)
 
     let argumentLabelOption = Arguments.Option.Long(key: "argument-label")
-    let argumentLabel = arguments.valueOfOption(argumentLabelOption)
+    Config.argumentLabel = arguments.valueOfOption(argumentLabelOption)
 
     let constructorNameOption = Arguments.Option.Long(key: "constructor-name")
     let constructorName = arguments.valueOfOption(constructorNameOption)
@@ -73,7 +73,7 @@ func main(_ arguments: [String]) {
     let model = coolie.generateModel(
         name: modelName,
         type: modelType,
-        argumentLabel: argumentLabel,
+        argumentLabel: Config.argumentLabel,
         constructorName: constructorName,
         jsonDictionaryName: jsonDictionaryName,
         debug: debug
