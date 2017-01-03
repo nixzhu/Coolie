@@ -45,7 +45,13 @@ func main(_ arguments: [String]) {
     let coolie = Coolie(jsonString)
 
     let argumentLabelOption = Arguments.Option.Long(key: "argument-label")
-    Config.argumentLabel = arguments.valueOfOption(argumentLabelOption)
+    arguments.valueOfOption(argumentLabelOption).flatMap {
+        Config.argumentLabel = $0
+    }
+    let parameterNameOption = Arguments.Option.Long(key: "parameter-name")
+    arguments.valueOfOption(parameterNameOption).flatMap {
+        Config.parameterName = $0
+    }
 
     let constructorNameOption = Arguments.Option.Long(key: "constructor-name")
     let constructorName = arguments.valueOfOption(constructorNameOption)
