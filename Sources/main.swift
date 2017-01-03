@@ -54,13 +54,17 @@ func main(_ arguments: [String]) {
     }
 
     let constructorNameOption = Arguments.Option.Long(key: "constructor-name")
-    let constructorName = arguments.valueOfOption(constructorNameOption)
+    arguments.valueOfOption(constructorNameOption).flatMap {
+        Config.constructorName = $0
+    }
 
     let jsonDictionaryNameOption = Arguments.Option.Long(key: "json-dictionary-name")
-    let jsonDictionaryName = arguments.valueOfOption(jsonDictionaryNameOption)
+    arguments.valueOfOption(jsonDictionaryNameOption).flatMap {
+        Config.jsonDictionaryName = $0
+    }
 
     let debugOption = Arguments.Option.Long(key: "debug")
-    let debug = arguments.containsOption(debugOption)
+    Config.debug = arguments.containsOption(debugOption)
 
     let modelTypeOption = Arguments.Option.Long(key: "model-type")
     let modelTypeRawValue = arguments.valueOfOption(modelTypeOption)?.lowercased()
@@ -80,9 +84,9 @@ func main(_ arguments: [String]) {
         name: modelName,
         type: modelType,
         argumentLabel: Config.argumentLabel,
-        constructorName: constructorName,
-        jsonDictionaryName: jsonDictionaryName,
-        debug: debug
+        constructorName: Config.constructorName,
+        jsonDictionaryName: Config.jsonDictionaryName,
+        debug: Config.debug
     )
 
     model.flatMap({ print($0) })

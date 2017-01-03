@@ -59,7 +59,7 @@ extension Coolie.Value {
         case optionalInArray
     }
 
-    func generateOrdinaryProperty(of _type: OrdinaryPropertyType, with key: String, debug: Bool, level: Int, into string: inout String) {
+    func generateOrdinaryProperty(of _type: OrdinaryPropertyType, with key: String, level: Int, into string: inout String) {
         switch _type {
         case .normal:
             if case .null(let optionalValue) = self {
@@ -95,20 +95,20 @@ extension Coolie.Value {
                 if isHyperString {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase)String = \(parameterName())[\"\(key)\"] as? String else { "
-                    string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                    string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                     indent(with: level, into: &string)
                     switch self {
                     case .url:
                         string += "guard let \(key.coolie_lowerCamelCase) = URL(string: \(key.coolie_lowerCamelCase)String) else { "
-                        string += debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
+                        string += Config.debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
                     case .date(let type):
                         switch type {
                         case .iso8601:
                             string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.iso8601).date(from: \(key.coolie_lowerCamelCase)String) else { "
-                            string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                            string += Config.debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         case .dateOnly:
                             string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.dateOnly).date(from: \(key.coolie_lowerCamelCase)String) else { "
-                            string += debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                            string += Config.debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
                         }
                     default:
                         fatalError("Unknown hyper string")
@@ -116,14 +116,14 @@ extension Coolie.Value {
                 } else {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type) else { "
-                    string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                    string += Config.debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
                 }
             }
         case .normalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = \(parameterName())[\"\(key)\"] as? [String] else { "
-                string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
                 switch self {
                 case .url:
@@ -141,13 +141,13 @@ extension Coolie.Value {
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? [\(type)] else { "
-                string += debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                string += Config.debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
             }
         case .optionalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = \(parameterName())[\"\(key)\"] as? [String?] else { "
-                string += debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
                 indent(with: level, into: &string)
                 switch self {
                 case .url:
@@ -165,7 +165,7 @@ extension Coolie.Value {
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? [\(type)?] else { "
-                string += debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
+                string += Config.debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
             }
         }
     }

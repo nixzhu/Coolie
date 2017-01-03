@@ -9,8 +9,11 @@
 import Foundation
 
 class Config {
-    static var argumentLabel: String = "_"
+    static var constructorName: String?
+    static var jsonDictionaryName: String = "[String: Any]"
+    static var argumentLabel: String?
     static var parameterName: String = "json"
+    static var debug: Bool = false
 
     class DateFormatterName {
         static var iso8601 = "iso8601DateFormatter"

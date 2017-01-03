@@ -29,9 +29,9 @@ final public class Coolie {
         var string = ""
         switch type {
         case .`struct`:
-            value.generateStruct(modelName: name, argumentLabel: argumentLabel, constructorName: constructorName, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
+            value.generateStruct(modelName: name, into: &string)
         case .`class`:
-            value.generateClass(modelName: name, argumentLabel: argumentLabel, jsonDictionaryName: jsonDictionaryName, debug: debug, into: &string)
+            value.generateClass(modelName: name, into: &string)
         }
         return string
     }
