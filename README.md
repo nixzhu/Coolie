@@ -317,7 +317,7 @@ If you need class model, use the following command:
 $ ./.build/debug/coolie -i test.json --model-name User --model-type class
 ```
 
-Also `--argument-label` and `--json-dictionary-name` options are available for class.
+Also `--argument-label`, `--parameter-name`and `--json-dictionary-name` options are available for class.
 
 If you need more information for debug, append a `--debug` option in all the commands.
 
