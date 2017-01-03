@@ -72,7 +72,7 @@ Build coolie & run:
 
 ``` bash
 $ swift build
-$ ./.build/debug/coolie -i test.json --model-name User --argument-label json
+$ ./.build/debug/coolie -i test.json --model-name User --argument-label json --parameter-name info
 ```
 
 It will generate:
@@ -213,7 +213,7 @@ Now you can modify the models (the name of properties or their type) if you need
 You can specify constructor name, argument label, or json dictionary name, like following command:
 
 ``` bash
-$ ./.build/debug/coolie -i test.json --model-name User --constructor-name create --argument-label with --json-dictionary-name JSONDictionary
+$ ./.build/debug/coolie -i test.json --model-name User --constructor-name create --argument-label with --parameter-name json --json-dictionary-name JSONDictionary
 ```
 
 It will generate:
@@ -228,7 +228,7 @@ struct User {
 		let latestDreams: [String?]
 		let latestFeelings: [Double]
 		struct Love {
-			static func create(with info: JSONDictionary) -> Love? {
+			static func create(with json: JSONDictionary) -> Love? {
 				return Love()
 			}
 		}
@@ -236,20 +236,20 @@ struct User {
 		let motto: String
 		let skills: [String]
 		let twitter: URL
-		static func create(with info: JSONDictionary) -> Detail? {
-			guard let birthdayString = info["birthday"] as? String else { return nil }
+		static func create(with json: JSONDictionary) -> Detail? {
+			guard let birthdayString = json["birthday"] as? String else { return nil }
 			guard let birthday = dateOnlyDateFormatter.date(from: birthdayString) else { return nil }
-			guard let favoriteWebsitesStrings = info["favorite_websites"] as? [String] else { return nil }
+			guard let favoriteWebsitesStrings = json["favorite_websites"] as? [String] else { return nil }
 			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
-			let gender = info["gender"] as? UnknownType
-			guard let isDogLover = info["is_dog_lover"] as? Bool else { return nil }
-			guard let latestDreams = info["latest_dreams"] as? [String?] else { return nil }
-			guard let latestFeelings = info["latest_feelings"] as? [Double] else { return nil }
-			guard let lovesJSONArray = info["loves"] as? [JSONDictionary] else { return nil }
+			let gender = json["gender"] as? UnknownType
+			guard let isDogLover = json["is_dog_lover"] as? Bool else { return nil }
+			guard let latestDreams = json["latest_dreams"] as? [String?] else { return nil }
+			guard let latestFeelings = json["latest_feelings"] as? [Double] else { return nil }
+			guard let lovesJSONArray = json["loves"] as? [JSONDictionary] else { return nil }
 			let loves = lovesJSONArray.map({ Love.create(with: $0) }).flatMap({ $0 })
-			guard let motto = info["motto"] as? String else { return nil }
-			guard let skills = info["skills"] as? [String] else { return nil }
-			guard let twitterString = info["twitter"] as? String else { return nil }
+			guard let motto = json["motto"] as? String else { return nil }
+			guard let skills = json["skills"] as? [String] else { return nil }
+			guard let twitterString = json["twitter"] as? String else { return nil }
 			guard let twitter = URL(string: twitterString) else { return nil }
 			return Detail(birthday: birthday, favoriteWebsites: favoriteWebsites, gender: gender, isDogLover: isDogLover, latestDreams: latestDreams, latestFeelings: latestFeelings, loves: loves, motto: motto, skills: skills, twitter: twitter)
 		}
@@ -258,9 +258,9 @@ struct User {
 	struct Experience {
 		let age: Double
 		let name: String
-		static func create(with info: JSONDictionary) -> Experience? {
-			guard let age = info["age"] as? Double else { return nil }
-			guard let name = info["name"] as? String else { return nil }
+		static func create(with json: JSONDictionary) -> Experience? {
+			guard let age = json["age"] as? Double else { return nil }
+			guard let name = json["name"] as? String else { return nil }
 			return Experience(age: age, name: name)
 		}
 	}
@@ -273,36 +273,36 @@ struct User {
 			let code: String?
 			let comments: [String]?
 			let design: String?
-			static func create(with info: JSONDictionary) -> More? {
-				let code = info["code"] as? String
-				let comments = info["comments"] as? [String]
-				let design = info["design"] as? String
+			static func create(with json: JSONDictionary) -> More? {
+				let code = json["code"] as? String
+				let comments = json["comments"] as? [String]
+				let design = json["design"] as? String
 				return More(code: code, comments: comments, design: design)
 			}
 		}
 		let more: More
 		let name: String?
 		let url: URL?
-		static func create(with info: JSONDictionary) -> Project? {
-			guard let bytes = info["bytes"] as? [Int] else { return nil }
-			let createdAtString = info["created_at"] as? String
+		static func create(with json: JSONDictionary) -> Project? {
+			guard let bytes = json["bytes"] as? [Int] else { return nil }
+			let createdAtString = json["created_at"] as? String
 			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
-			guard let moreJSONDictionary = info["more"] as? JSONDictionary else { return nil }
+			guard let moreJSONDictionary = json["more"] as? JSONDictionary else { return nil }
 			guard let more = More.create(with: moreJSONDictionary) else { return nil }
-			let name = info["name"] as? String
-			let urlString = info["url"] as? String
+			let name = json["name"] as? String
+			let urlString = json["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
 			return Project(bytes: bytes, createdAt: createdAt, more: more, name: name, url: url)
 		}
 	}
 	let projects: [Project?]
-	static func create(with info: JSONDictionary) -> User? {
-		guard let detailJSONDictionary = info["detail"] as? JSONDictionary else { return nil }
+	static func create(with json: JSONDictionary) -> User? {
+		guard let detailJSONDictionary = json["detail"] as? JSONDictionary else { return nil }
 		guard let detail = Detail.create(with: detailJSONDictionary) else { return nil }
-		guard let experiencesJSONArray = info["experiences"] as? [JSONDictionary] else { return nil }
+		guard let experiencesJSONArray = json["experiences"] as? [JSONDictionary] else { return nil }
 		let experiences = experiencesJSONArray.map({ Experience.create(with: $0) }).flatMap({ $0 })
-		guard let name = info["name"] as? String else { return nil }
-		guard let projectsJSONArray = info["projects"] as? [JSONDictionary?] else { return nil }
+		guard let name = json["name"] as? String else { return nil }
+		guard let projectsJSONArray = json["projects"] as? [JSONDictionary?] else { return nil }
 		let projects = projectsJSONArray.map({ $0.flatMap({ Project.create(with: $0) }) })
 		return User(detail: detail, experiences: experiences, name: name, projects: projects)
 	}
