@@ -95,20 +95,36 @@ extension Coolie.Value {
                 if isHyperString {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase)String = \(parameterName())[\"\(key)\"] as? String else { "
-                    string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                    if Config.throwsEnabled {
+                        string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                    } else {
+                        string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                    }
                     indent(with: level, into: &string)
                     switch self {
                     case .url:
                         string += "guard let \(key.coolie_lowerCamelCase) = URL(string: \(key.coolie_lowerCamelCase)String) else { "
-                        string += Config.debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
+                        if Config.throwsEnabled {
+                            string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+                        } else {
+                            string += Config.debug ? "print(\"Not generate url key: \(key)\"); return nil }\n" : "return nil }\n"
+                        }
                     case .date(let type):
                         switch type {
                         case .iso8601:
                             string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.iso8601).date(from: \(key.coolie_lowerCamelCase)String) else { "
-                            string += Config.debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                            if Config.throwsEnabled {
+                                string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+                            } else {
+                                string += Config.debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                            }
                         case .dateOnly:
                             string += "guard let \(key.coolie_lowerCamelCase) = \(Config.DateFormatterName.dateOnly).date(from: \(key.coolie_lowerCamelCase)String) else { "
-                            string += Config.debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                            if Config.throwsEnabled {
+                                string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+                            } else {
+                                string += Config.debug ? "print(\"Not generate date key: \(key)\"); return nil }\n" : "return nil }\n"
+                            }
                         }
                     default:
                         fatalError("Unknown hyper string")
@@ -116,14 +132,22 @@ extension Coolie.Value {
                 } else {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type) else { "
-                    string += Config.debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                    if Config.throwsEnabled {
+                        string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                    } else {
+                        string += Config.debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                    }
                 }
             }
         case .normalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = \(parameterName())[\"\(key)\"] as? [String] else { "
-                string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                if Config.throwsEnabled {
+                    string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                } else {
+                    string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                }
                 indent(with: level, into: &string)
                 switch self {
                 case .url:
@@ -141,13 +165,21 @@ extension Coolie.Value {
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? [\(type)] else { "
-                string += Config.debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                if Config.throwsEnabled {
+                    string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                } else {
+                    string += Config.debug ? "print(\"Not found key: \(key)\"); return nil }\n" : "return nil }\n"
+                }
             }
         case .optionalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase)Strings = \(parameterName())[\"\(key)\"] as? [String?] else { "
-                string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                if Config.throwsEnabled {
+                    string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                } else {
+                    string += Config.debug ? "print(\"Not found url key: \(key)\"); return nil }\n" : "return nil }\n"
+                }
                 indent(with: level, into: &string)
                 switch self {
                 case .url:
@@ -165,7 +197,11 @@ extension Coolie.Value {
             } else {
                 indent(with: level, into: &string)
                 string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? [\(type)?] else { "
-                string += Config.debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
+                if Config.throwsEnabled {
+                    string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+                } else {
+                    string += Config.debug ? "print(\"Not generate array key: \(key)\"); return nil }\n" : "return nil }\n"
+                }
             }
         }
     }

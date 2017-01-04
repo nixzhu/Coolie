@@ -30,7 +30,11 @@ extension Coolie.Value {
             if let constructorName = Config.constructorName {
                 string += "static func \(constructorName)(\(initArgumentLabel): \(Config.jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
             } else {
-                string += "init?(\(initArgumentLabel): \(Config.jsonDictionaryName)) {\n"
+                if Config.throwsEnabled {
+                    string += "init(\(initArgumentLabel): \(Config.jsonDictionaryName)) throws {\n"
+                } else {
+                    string += "init?(\(initArgumentLabel): \(Config.jsonDictionaryName)) {\n"
+                }
             }
             let trueArgumentLabel = Config.argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
@@ -137,14 +141,23 @@ extension Coolie.Value {
     private func generateStructDictionaryProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
         indent(with: level, into: &string)
         string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName) else { "
-        string += Config.debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
+        if Config.throwsEnabled {
+            string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+        } else {
+            string += Config.debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
+        }
         indent(with: level, into: &string)
         if let constructorName = Config.constructorName {
             string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
         } else {
-            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+            if Config.throwsEnabled {
+                string += "guard let \(key.coolie_lowerCamelCase) = try? \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+            } else {
+                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+            }
         }
-        string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
     }
 
     private func generateStructArrayProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
@@ -155,7 +168,11 @@ extension Coolie.Value {
                     if value.isDictionary {
                         indent(with: level, into: &string)
                         string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(parameterName())[\"\(key)\"] as? [\(Config.jsonDictionaryName)?] else { "
-                        string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                        if Config.throwsEnabled {
+                            string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                        } else {
+                            string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                        }
                         indent(with: level, into: &string)
                         if let constructorName = Config.constructorName {
                             string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) }) })\n"
@@ -174,7 +191,11 @@ extension Coolie.Value {
                 if unionValue.isDictionary {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(parameterName())[\"\(key)\"] as? [\(Config.jsonDictionaryName)] else { "
-                    string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                    if Config.throwsEnabled {
+                        string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                    } else {
+                        string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                    }
                     indent(with: level, into: &string)
                     if let constructorName = Config.constructorName {
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"

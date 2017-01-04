@@ -14,6 +14,7 @@ class Config {
     static var argumentLabel: String?
     static var parameterName: String = "json"
     static var debug: Bool = false
+    static var throwsEnabled: Bool = false
 
     class DateFormatterName {
         static var iso8601 = "iso8601DateFormatter"

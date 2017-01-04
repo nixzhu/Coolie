@@ -26,7 +26,11 @@ extension Coolie.Value {
             // generate method
             indent(with: level + 1, into: &string)
             let initArgumentLabel = "\(Config.argumentLabel ?? "_") \(parameterName())"
-            string += "init?(\(initArgumentLabel): \(Config.jsonDictionaryName)) {\n"
+            if Config.throwsEnabled {
+                string += "init(\(initArgumentLabel): \(Config.jsonDictionaryName)) throws {\n"
+            } else {
+                string += "init?(\(initArgumentLabel): \(Config.jsonDictionaryName)) {\n"
+            }
             let trueArgumentLabel = Config.argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
                 let value = info[key]
@@ -117,10 +121,19 @@ extension Coolie.Value {
     private func generateClassDictionaryProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
         indent(with: level, into: &string)
         string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName) else { "
-        string += Config.debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
+        if Config.throwsEnabled {
+            string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+        } else {
+            string += Config.debug ? "print(\"Not found dictionary: \(key)\"); return nil }\n" : "return nil }\n"
+        }
         indent(with: level, into: &string)
-        string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
-        string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+        if Config.throwsEnabled {
+            string += "guard let \(key.coolie_lowerCamelCase) = try? \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+            string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+        } else {
+            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+            string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+        }
     }
 
     private func generateClassArrayProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
@@ -131,7 +144,11 @@ extension Coolie.Value {
                     if value.isDictionary {
                         indent(with: level, into: &string)
                         string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(parameterName())[\"\(key)\"] as? [\(Config.jsonDictionaryName)?] else { "
-                        string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                        if Config.throwsEnabled {
+                            string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                        } else {
+                            string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                        }
                         indent(with: level, into: &string)
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ $0.flatMap({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }) })\n"
                     } else {
@@ -146,7 +163,11 @@ extension Coolie.Value {
                 if unionValue.isDictionary {
                     indent(with: level, into: &string)
                     string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(parameterName())[\"\(key)\"] as? [\(Config.jsonDictionaryName)] else { "
-                    string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                    if Config.throwsEnabled {
+                        string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+                    } else {
+                        string += Config.debug ? "print(\"Not found array key: \(key)\"); return nil }\n" : "return nil }\n"
+                    }
                     indent(with: level, into: &string)
                     string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                 } else {
