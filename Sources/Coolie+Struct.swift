@@ -25,9 +25,9 @@ extension Coolie.Value {
             }
             // generate method
             indent(with: level + 1, into: &string)
-
+            let modelName = modelName ?? "Model"
             if let constructorName = Config.constructorName {
-                string += "static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName ?? "Model")? {\n"
+                string += "static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
             } else {
                 if Config.throwsEnabled {
                     string += "init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
@@ -42,7 +42,7 @@ extension Coolie.Value {
             }
             if let _ = Config.constructorName {
                 indent(with: level + 2, into: &string)
-                string += "return \(modelName ?? "Model")("
+                string += "return \(modelName)("
                 let lastIndex = info.keys.count - 1
                 if info.keys.isEmpty {
                     string += ")"
@@ -62,6 +62,31 @@ extension Coolie.Value {
             }
             indent(with: level + 1, into: &string)
             string += "}\n"
+            if Config.throwsEnabled {
+                indent(with: level + 1, into: &string)
+                if let constructorName = Config.constructorName {
+                    string += "static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                } else {
+                    string += "static func create(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                }
+                indent(with: level + 2, into: &string)
+                string += "do {\n"
+                indent(with: level + 3, into: &string)
+                if let argumentLabel = Config.argumentLabel {
+                    string += "return try \(modelName)(\(argumentLabel): \(Config.parameterName))\n"
+                } else {
+                    string += "return try \(modelName)(\(Config.parameterName))\n"
+                }
+                indent(with: level + 2, into: &string)
+                string += "} catch {\n"
+                indent(with: level + 3, into: &string)
+                string += "print(\"\(modelName) json parse error: \\(error)\")\n"
+                indent(with: level + 3, into: &string)
+                string += "return nil\n"
+                indent(with: level + 2, into: &string)
+                string += "}\n"
+                indent(with: level + 1, into: &string)
+            }
             indent(with: level, into: &string)
             string += "}\n"
         case .array(let name, let values):
