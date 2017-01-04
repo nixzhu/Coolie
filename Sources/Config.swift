@@ -39,3 +39,13 @@ let dateOnlyDateFormatter: DateFormatter = {
 func parameterName() -> String {
     return Config.parameterName
 }
+
+func initArgumentLabel() -> String {
+    let _argumentLabel = Config.argumentLabel ?? "_"
+    let _parameterName = parameterName()
+    if _argumentLabel == _parameterName {
+        return _argumentLabel
+    } else {
+        return "\(_argumentLabel) \(_parameterName)"
+    }
+}

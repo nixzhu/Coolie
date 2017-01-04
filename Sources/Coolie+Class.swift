@@ -25,11 +25,10 @@ extension Coolie.Value {
             }
             // generate method
             indent(with: level + 1, into: &string)
-            let initArgumentLabel = "\(Config.argumentLabel ?? "_") \(parameterName())"
             if Config.throwsEnabled {
-                string += "init(\(initArgumentLabel): \(Config.jsonDictionaryName)) throws {\n"
+                string += "init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
             } else {
-                string += "init?(\(initArgumentLabel): \(Config.jsonDictionaryName)) {\n"
+                string += "init?(\(initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
             }
             let trueArgumentLabel = Config.argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
