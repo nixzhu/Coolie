@@ -86,6 +86,7 @@ extension Coolie.Value {
                 indent(with: level + 2, into: &string)
                 string += "}\n"
                 indent(with: level + 1, into: &string)
+                string += "}\n"
             }
             indent(with: level, into: &string)
             string += "}\n"

@@ -311,6 +311,180 @@ struct User {
 
 You may need `typealias JSONDictionary = [String: Any]`.
 
+Or the way I like with throws:
+
+``` bash
+./.build/debug/coolie -i test.json --model-name User --argument-label with --parameter-name json --json-dictionary-name JSONDictionary --throws
+```
+
+It will generate:
+
+``` swift
+struct User {
+	struct Detail {
+		let birthday: Date
+		let favoriteWebsites: [URL]
+		let gender: UnknownType?
+		let isDogLover: Bool
+		let latestDreams: [String?]
+		let latestFeelings: [Double]
+		struct Love {
+			init(with json: JSONDictionary) throws {
+			}
+			static func create(with json: JSONDictionary) -> Love? {
+				do {
+					return try Love(with: json)
+				} catch {
+					print("Love json parse error: \(error)")
+					return nil
+				}
+			}
+		}
+		let loves: [Love]
+		let motto: String
+		let skills: [String]
+		let twitter: URL
+		init(with json: JSONDictionary) throws {
+			guard let birthdayString = json["birthday"] as? String else { throw ParseError.notFound(key: "birthday") }
+			guard let birthday = dateOnlyDateFormatter.date(from: birthdayString) else { throw ParseError.failedToGenerate(property: "birthday") }
+			guard let favoriteWebsitesStrings = json["favorite_websites"] as? [String] else { throw ParseError.notFound(key: "favorite_websites") }
+			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
+			let gender = json["gender"] as? UnknownType
+			guard let isDogLover = json["is_dog_lover"] as? Bool else { throw ParseError.notFound(key: "is_dog_lover") }
+			guard let latestDreams = json["latest_dreams"] as? [String?] else { throw ParseError.failedToGenerate(property: "latestDreams") }
+			guard let latestFeelings = json["latest_feelings"] as? [Double] else { throw ParseError.notFound(key: "latest_feelings") }
+			guard let lovesJSONArray = json["loves"] as? [JSONDictionary] else { throw ParseError.notFound(key: "loves") }
+			let loves = lovesJSONArray.map({ Love(with: $0) }).flatMap({ $0 })
+			guard let motto = json["motto"] as? String else { throw ParseError.notFound(key: "motto") }
+			guard let skills = json["skills"] as? [String] else { throw ParseError.notFound(key: "skills") }
+			guard let twitterString = json["twitter"] as? String else { throw ParseError.notFound(key: "twitter") }
+			guard let twitter = URL(string: twitterString) else { throw ParseError.failedToGenerate(property: "twitter") }
+			self.birthday = birthday
+			self.favoriteWebsites = favoriteWebsites
+			self.gender = gender
+			self.isDogLover = isDogLover
+			self.latestDreams = latestDreams
+			self.latestFeelings = latestFeelings
+			self.loves = loves
+			self.motto = motto
+			self.skills = skills
+			self.twitter = twitter
+		}
+		static func create(with json: JSONDictionary) -> Detail? {
+			do {
+				return try Detail(with: json)
+			} catch {
+				print("Detail json parse error: \(error)")
+				return nil
+			}
+		}
+	}
+	let detail: Detail
+	struct Experience {
+		let age: Double
+		let name: String
+		init(with json: JSONDictionary) throws {
+			guard let age = json["age"] as? Double else { throw ParseError.notFound(key: "age") }
+			guard let name = json["name"] as? String else { throw ParseError.notFound(key: "name") }
+			self.age = age
+			self.name = name
+		}
+		static func create(with json: JSONDictionary) -> Experience? {
+			do {
+				return try Experience(with: json)
+			} catch {
+				print("Experience json parse error: \(error)")
+				return nil
+			}
+		}
+	}
+	let experiences: [Experience]
+	let name: String
+	struct Project {
+		let bytes: [Int]
+		let createdAt: Date?
+		struct More {
+			let code: String?
+			let comments: [String]?
+			let design: String?
+			init(with json: JSONDictionary) throws {
+				let code = json["code"] as? String
+				let comments = json["comments"] as? [String]
+				let design = json["design"] as? String
+				self.code = code
+				self.comments = comments
+				self.design = design
+			}
+			static func create(with json: JSONDictionary) -> More? {
+				do {
+					return try More(with: json)
+				} catch {
+					print("More json parse error: \(error)")
+					return nil
+				}
+			}
+		}
+		let more: More
+		let name: String?
+		let url: URL?
+		init(with json: JSONDictionary) throws {
+			guard let bytes = json["bytes"] as? [Int] else { throw ParseError.notFound(key: "bytes") }
+			let createdAtString = json["created_at"] as? String
+			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
+			guard let moreJSONDictionary = json["more"] as? JSONDictionary else { throw ParseError.notFound(key: "more") }
+			guard let more = try? More(with: moreJSONDictionary) else { throw ParseError.failedToGenerate(property: "more") }
+			let name = json["name"] as? String
+			let urlString = json["url"] as? String
+			let url = urlString.flatMap({ URL(string: $0) })
+			self.bytes = bytes
+			self.createdAt = createdAt
+			self.more = more
+			self.name = name
+			self.url = url
+		}
+		static func create(with json: JSONDictionary) -> Project? {
+			do {
+				return try Project(with: json)
+			} catch {
+				print("Project json parse error: \(error)")
+				return nil
+			}
+		}
+	}
+	let projects: [Project?]
+	init(with json: JSONDictionary) throws {
+		guard let detailJSONDictionary = json["detail"] as? JSONDictionary else { throw ParseError.notFound(key: "detail") }
+		guard let detail = try? Detail(with: detailJSONDictionary) else { throw ParseError.failedToGenerate(property: "detail") }
+		guard let experiencesJSONArray = json["experiences"] as? [JSONDictionary] else { throw ParseError.notFound(key: "experiences") }
+		let experiences = experiencesJSONArray.map({ Experience(with: $0) }).flatMap({ $0 })
+		guard let name = json["name"] as? String else { throw ParseError.notFound(key: "name") }
+		guard let projectsJSONArray = json["projects"] as? [JSONDictionary?] else { throw ParseError.notFound(key: "projects") }
+		let projects = projectsJSONArray.map({ $0.flatMap({ Project(with: $0) }) })
+		self.detail = detail
+		self.experiences = experiences
+		self.name = name
+		self.projects = projects
+	}
+	static func create(with json: JSONDictionary) -> User? {
+		do {
+			return try User(with: json)
+		} catch {
+			print("User json parse error: \(error)")
+			return nil
+		}
+	}
+}
+```
+
+Of course, you need to define `ParseError`:
+
+``` swift
+enum ParseError: Error {
+    case notFound(key: String)
+    case failedToGenerate(property: String)
+}
+```
+
 If you need class model, use the following command:
 
 ``` bash
