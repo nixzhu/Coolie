@@ -14,6 +14,8 @@ extension Coolie.Value {
         switch self {
         case .bool, .number, .string, .url, .date, .null:
             break
+        //case .null(let value):
+
         case .dictionary(let info):
             // struct name
             indent(with: level, into: &string)
@@ -113,7 +115,7 @@ extension Coolie.Value {
 
 extension Coolie.Value {
 
-    func declareStructProperty(for key: String, level: Int, into string: inout String) {
+    func declareStructProperty(for key: String, optional: Bool = false, level: Int, into string: inout String) {
         if isDictionaryOrArray {
             generateStruct(fromLevel: level, modelName: key.capitalized, into: &string)
             indent(with: level, into: &string)
@@ -122,71 +124,114 @@ extension Coolie.Value {
                     if case .null(let optionalValue) = unionValue {
                         if let _value = optionalValue {
                             if _value.isDictionary {
-                                string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]\n"
+                                string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
                             } else {
-                                string += "let \(key.coolie_lowerCamelCase): [\(_value.type)?]\n"
+                                string += "let \(key.coolie_lowerCamelCase): [\(_value.type)?]"
                             }
                         } else {
-                            string += "let \(key.coolie_lowerCamelCase): [UnknowType?]\n"
+                            string += "let \(key.coolie_lowerCamelCase): [UnknowType?]"
                         }
                     } else {
                         if unionValue.isDictionary {
-                            string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
+                            string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                         } else {
-                            string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]\n"
+                            string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
                         }
                     }
                 } else {
-                    string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]\n"
+                    string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                 }
             } else {
-                string += "let \(key.coolie_lowerCamelCase): \(key.capitalized)\n"
+                string += "let \(key.coolie_lowerCamelCase): \(key.capitalized)"
+            }
+            if optional {
+                string += "?\n"
+            } else {
+                string += "\n"
             }
         } else {
-            indent(with: level, into: &string)
-            string += "let \(key.coolie_lowerCamelCase): \(type)\n"
+            if case .null(let value) = self {
+                if let value = value {
+                    value.declareStructProperty(for: key, optional: true, level: level, into: &string)
+                } else {
+                    indent(with: level, into: &string)
+                    string += "let \(key.coolie_lowerCamelCase): UnknownType?\n"
+                }
+            } else {
+                indent(with: level, into: &string)
+                string += "let \(key.coolie_lowerCamelCase): \(type)"
+                if optional {
+                    string += "?\n"
+                } else {
+                    string += "\n"
+                }
+            }
         }
     }
 }
 
 extension Coolie.Value {
 
-    func generateStructProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
+    func generateStructProperty(with key: String, optional: Bool = false, trueArgumentLabel: String, level: Int, into string: inout String) {
         if isDictionaryOrArray {
             if isDictionary {
-                generateStructDictionaryProperty(with: key, trueArgumentLabel: trueArgumentLabel, level: level + 2, into: &string)
+                generateStructDictionaryProperty(with: key, optional: optional, trueArgumentLabel: trueArgumentLabel, level: level + 2, into: &string)
             } else if isArray {
-                generateStructArrayProperty(with: key, trueArgumentLabel: trueArgumentLabel, level: level + 2, into: &string)
+                generateStructArrayProperty(with: key, optional: optional, trueArgumentLabel: trueArgumentLabel, level: level + 2, into: &string)
             }
         } else {
-            generateOrdinaryProperty(of: .normal, with: key, level: level + 2, into: &string)
-        }
-    }
-
-    private func generateStructDictionaryProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
-        indent(with: level, into: &string)
-        string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName) else { "
-        if Config.throwsEnabled {
-            string += "throw ParseError.notFound(key: \"\(key)\") }\n"
-        } else {
-            string += Config.debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
-        }
-        indent(with: level, into: &string)
-        if let constructorName = Config.constructorName {
-            string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
-        } else {
-            if Config.throwsEnabled {
-                string += "guard let \(key.coolie_lowerCamelCase) = try? \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
-                string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+            if case .null(let value) = self {
+                if let value = value {
+                    value.generateStructProperty(with: key, optional: true, trueArgumentLabel: trueArgumentLabel, level: level, into: &string)
+                } else {
+                    let type = "UnknownType"
+                    string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
+                }
             } else {
-                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
-                string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+                generateOrdinaryProperty(of: optional ? .optional : .normal, with: key, level: level + 2, into: &string)
             }
         }
     }
 
-    private func generateStructArrayProperty(with key: String, trueArgumentLabel: String, level: Int, into string: inout String) {
+    private func generateStructDictionaryProperty(with key: String, optional: Bool, trueArgumentLabel: String, level: Int, into string: inout String) {
+        if optional {
+            indent(with: level, into: &string)
+            string += "let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName)\n"
+            indent(with: level, into: &string)
+            if let constructorName = Config.constructorName {
+                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONDictionary.flatMap({ \(key.capitalized).\(constructorName)(\(trueArgumentLabel)$0) })\n"
+            } else {
+                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONDictionary.flatMap({ \(key.capitalized)(\(trueArgumentLabel)$0) })\n"
+            }
+        } else {
+            indent(with: level, into: &string)
+            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName) else { "
+            if Config.throwsEnabled {
+                string += "throw ParseError.notFound(key: \"\(key)\") }\n"
+            } else {
+                string += Config.debug ? "print(\"Not found dictionary key: \(key)\"); return nil }\n" : "return nil }\n"
+            }
+            indent(with: level, into: &string)
+            if let constructorName = Config.constructorName {
+                string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+            } else {
+                if Config.throwsEnabled {
+                    string += "guard let \(key.coolie_lowerCamelCase) = try? \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                    string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
+                } else {
+                    string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                    string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
+                }
+            }
+        }
+    }
+
+    private func generateStructArrayProperty(with key: String, optional: Bool, trueArgumentLabel: String, level: Int, into string: inout String) {
         guard case .array(_, let values) = self else { fatalError("Value is not array") }
+        if optional {
+            string += "To be continue (for optional Array)"
+            return
+        }
         if let unionValue = unionValues(values) {
             if case .null(let optionalValue) = unionValue {
                 if let value = optionalValue {

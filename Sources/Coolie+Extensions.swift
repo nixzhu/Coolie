@@ -55,37 +55,41 @@ extension Coolie.Value {
 
     enum OrdinaryPropertyType {
         case normal
+        case optional
         case normalInArray
         case optionalInArray
     }
 
     func generateOrdinaryProperty(of _type: OrdinaryPropertyType, with key: String, level: Int, into string: inout String) {
+        func normal(value: Coolie.Value) {
+            if value.isHyperString {
+                indent(with: level, into: &string)
+                string += "let \(key.coolie_lowerCamelCase)String = \(parameterName())[\"\(key)\"] as? String\n"
+                indent(with: level, into: &string)
+                switch value {
+                case .url:
+                    string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ URL(string: $0) })\n"
+                case .date(let type):
+                    switch type {
+                    case .iso8601:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.iso8601).date(from: $0) })\n"
+                    case .dateOnly:
+                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) })\n"
+                    }
+                default:
+                    fatalError("Unknown hyper string")
+                }
+            } else {
+                indent(with: level, into: &string)
+                let type = "\(value.type)"
+                string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
+            }
+        }
         switch _type {
         case .normal:
             if case .null(let optionalValue) = self {
                 if let value = optionalValue {
-                    if value.isHyperString {
-                        indent(with: level, into: &string)
-                        string += "let \(key.coolie_lowerCamelCase)String = \(parameterName())[\"\(key)\"] as? String\n"
-                        indent(with: level, into: &string)
-                        switch value {
-                        case .url:
-                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ URL(string: $0) })\n"
-                        case .date(let type):
-                            switch type {
-                            case .iso8601:
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.iso8601).date(from: $0) })\n"
-                            case .dateOnly:
-                                string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)String.flatMap({ \(Config.DateFormatterName.dateOnly).date(from: $0) })\n"
-                            }
-                        default:
-                            fatalError("Unknown hyper string")
-                        }
-                    } else {
-                        indent(with: level, into: &string)
-                        let type = "\(value.type)"
-                        string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
-                    }
+                    normal(value: value)
                 } else {
                     indent(with: level, into: &string)
                     let type = "UnknownType"
@@ -139,6 +143,8 @@ extension Coolie.Value {
                     }
                 }
             }
+        case .optional:
+            normal(value: self)
         case .normalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
