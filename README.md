@@ -182,7 +182,6 @@ struct User {
 		self.projects = projects
 	}
 }
-
 ```
 
 You may need some date formatters:
@@ -296,7 +295,8 @@ struct User {
 	let projects: [Project?]
 	static func create(with json: JSONDictionary) -> User? {
 		guard let detailJSONDictionary = json["detail"] as? JSONDictionary else { return nil }
-		guard let detail = Detail.create(with: detailJSONDictionary) else { 		guard let experiencesJSONArray = json["experiences"] as? [JSONDictionary] else { return nil }
+		guard let detail = Detail.create(with: detailJSONDictionary) else { return nil }
+		guard let experiencesJSONArray = json["experiences"] as? [JSONDictionary] else { return nil }
 		let experiences = experiencesJSONArray.map({ Experience.create(with: $0) }).flatMap({ $0 })
 		guard let name = json["name"] as? String else { return nil }
 		guard let projectsJSONArray = json["projects"] as? [JSONDictionary?] else { return nil }
@@ -304,7 +304,6 @@ struct User {
 		return User(detail: detail, experiences: experiences, name: name, projects: projects)
 	}
 }
-
 ```
 
 You may need `typealias JSONDictionary = [String: Any]`.
@@ -472,7 +471,6 @@ struct User {
 		}
 	}
 }
-
 ```
 
 Of course, you need to define `ParseError`:
@@ -597,7 +595,6 @@ class User {
 		self.projects = projects
 	}
 }
-
 ```
 
 Also `--argument-label`, `--parameter-name` and `--json-dictionary-name` options are available for class.
