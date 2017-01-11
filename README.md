@@ -1,4 +1,3 @@
-
 # Coolie([苦力](https://zh.wikipedia.org/wiki/%E8%8B%A6%E5%8A%9B))
 
 Coolie parse a JSON file to generate models (& their constructors).
@@ -61,8 +60,7 @@ Swift 3.0
     {
       "name": null,
       "bytes": [],
-      "more": {
-      }
+      "more": null
     }
   ]
 }
@@ -138,27 +136,27 @@ struct User {
 		let bytes: [Int]
 		let createdAt: Date?
 		struct More {
-			let code: String?
-			let comments: [String]?
-			let design: String?
+			let code: String
+			let comments: [String]
+			let design: String
 			init?(json info: [String: Any]) {
-				let code = info["code"] as? String
-				let comments = info["comments"] as? [String]
-				let design = info["design"] as? String
+				guard let code = info["code"] as? String else { return nil }
+				guard let comments = info["comments"] as? [String] else { return nil }
+				guard let design = info["design"] as? String else { return nil }
 				self.code = code
 				self.comments = comments
 				self.design = design
 			}
 		}
-		let more: More
+		let more: More?
 		let name: String?
 		let url: URL?
 		init?(json info: [String: Any]) {
 			guard let bytes = info["bytes"] as? [Int] else { return nil }
 			let createdAtString = info["created_at"] as? String
 			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
-			guard let moreJSONDictionary = info["more"] as? [String: Any] else { return nil }
-			guard let more = More(json: moreJSONDictionary) else { return nil }
+			let moreJSONDictionary = info["more"] as? [String: Any]
+			let more = moreJSONDictionary.flatMap({ More(json: $0) })
 			let name = info["name"] as? String
 			let urlString = info["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
@@ -184,6 +182,7 @@ struct User {
 		self.projects = projects
 	}
 }
+
 ```
 
 You may need some date formatters:
@@ -207,7 +206,6 @@ let dateOnlyDateFormatter: DateFormatter = {
 Use `--iso8601-date-formatter-name` or `--date-only-date-formatter-name` can set the name of the date formatter.
 
 Pretty cool, ah?
-
 Now you can modify the models (the name of properties or their type) if you need.
 
 You can specify constructor name, argument label, or json dictionary name, like following command:
@@ -270,25 +268,25 @@ struct User {
 		let bytes: [Int]
 		let createdAt: Date?
 		struct More {
-			let code: String?
-			let comments: [String]?
-			let design: String?
+			let code: String
+			let comments: [String]
+			let design: String
 			static func create(with json: JSONDictionary) -> More? {
-				let code = json["code"] as? String
-				let comments = json["comments"] as? [String]
-				let design = json["design"] as? String
+				guard let code = json["code"] as? String else { return nil }
+				guard let comments = json["comments"] as? [String] else { return nil }
+				guard let design = json["design"] as? String else { return nil }
 				return More(code: code, comments: comments, design: design)
 			}
 		}
-		let more: More
+		let more: More?
 		let name: String?
 		let url: URL?
 		static func create(with json: JSONDictionary) -> Project? {
 			guard let bytes = json["bytes"] as? [Int] else { return nil }
 			let createdAtString = json["created_at"] as? String
 			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
-			guard let moreJSONDictionary = json["more"] as? JSONDictionary else { return nil }
-			guard let more = More.create(with: moreJSONDictionary) else { return nil }
+			let moreJSONDictionary = json["more"] as? JSONDictionary
+			let more = moreJSONDictionary.flatMap({ More.create(with: $0) })
 			let name = json["name"] as? String
 			let urlString = json["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
@@ -298,8 +296,7 @@ struct User {
 	let projects: [Project?]
 	static func create(with json: JSONDictionary) -> User? {
 		guard let detailJSONDictionary = json["detail"] as? JSONDictionary else { return nil }
-		guard let detail = Detail.create(with: detailJSONDictionary) else { return nil }
-		guard let experiencesJSONArray = json["experiences"] as? [JSONDictionary] else { return nil }
+		guard let detail = Detail.create(with: detailJSONDictionary) else { 		guard let experiencesJSONArray = json["experiences"] as? [JSONDictionary] else { return nil }
 		let experiences = experiencesJSONArray.map({ Experience.create(with: $0) }).flatMap({ $0 })
 		guard let name = json["name"] as? String else { return nil }
 		guard let projectsJSONArray = json["projects"] as? [JSONDictionary?] else { return nil }
@@ -307,6 +304,7 @@ struct User {
 		return User(detail: detail, experiences: experiences, name: name, projects: projects)
 	}
 }
+
 ```
 
 You may need `typealias JSONDictionary = [String: Any]`.
@@ -314,7 +312,7 @@ You may need `typealias JSONDictionary = [String: Any]`.
 Or the way I like with throws:
 
 ``` bash
-./.build/debug/coolie -i test.json --model-name User --argument-label with --parameter-name json --json-dictionary-name JSONDictionary --throws
+$ ./.build/debug/coolie -i test.json --model-name User --argument-label with --parameter-name json --json-dictionary-name JSONDictionary --throws
 ```
 
 It will generate:
@@ -404,13 +402,13 @@ struct User {
 		let bytes: [Int]
 		let createdAt: Date?
 		struct More {
-			let code: String?
-			let comments: [String]?
-			let design: String?
+			let code: String
+			let comments: [String]
+			let design: String
 			init(with json: JSONDictionary) throws {
-				let code = json["code"] as? String
-				let comments = json["comments"] as? [String]
-				let design = json["design"] as? String
+				guard let code = json["code"] as? String else { throw ParseError.notFound(key: "code") }
+				guard let comments = json["comments"] as? [String] else { throw ParseError.notFound(key: "comments") }
+				guard let design = json["design"] as? String else { throw ParseError.notFound(key: "design") }
 				self.code = code
 				self.comments = comments
 				self.design = design
@@ -424,15 +422,15 @@ struct User {
 				}
 			}
 		}
-		let more: More
+		let more: More?
 		let name: String?
 		let url: URL?
 		init(with json: JSONDictionary) throws {
 			guard let bytes = json["bytes"] as? [Int] else { throw ParseError.notFound(key: "bytes") }
 			let createdAtString = json["created_at"] as? String
 			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
-			guard let moreJSONDictionary = json["more"] as? JSONDictionary else { throw ParseError.notFound(key: "more") }
-			guard let more = try? More(with: moreJSONDictionary) else { throw ParseError.failedToGenerate(property: "more") }
+			let moreJSONDictionary = json["more"] as? JSONDictionary
+			let more = moreJSONDictionary.flatMap({ More(with: $0) })
 			let name = json["name"] as? String
 			let urlString = json["url"] as? String
 			let url = urlString.flatMap({ URL(string: $0) })
@@ -474,6 +472,7 @@ struct User {
 		}
 	}
 }
+
 ```
 
 Of course, you need to define `ParseError`:
@@ -491,7 +490,117 @@ If you need class model, use the following command:
 $ ./.build/debug/coolie -i test.json --model-name User --model-type class
 ```
 
-Also `--argument-label`, `--parameter-name`and `--json-dictionary-name` options are available for class.
+``` swift
+class User {
+	class Detail {
+		var birthday: Date
+		var favoriteWebsites: [URL]
+		var gender: UnknownType?
+		var isDogLover: Bool
+		var latestDreams: [String?]
+		var latestFeelings: [Double]
+		class Love {
+			init?(_ json: [String: Any]) {
+			}
+		}
+		var loves: [Love]
+		var motto: String
+		var skills: [String]
+		var twitter: URL
+		init?(_ json: [String: Any]) {
+			guard let birthdayString = json["birthday"] as? String else { return nil }
+			guard let birthday = dateOnlyDateFormatter.date(from: birthdayString) else { return nil }
+			guard let favoriteWebsitesStrings = json["favorite_websites"] as? [String] else { return nil }
+			let favoriteWebsites = favoriteWebsitesStrings.map({ URL(string: $0) }).flatMap({ $0 })
+			let gender = json["gender"] as? UnknownType
+			guard let isDogLover = json["is_dog_lover"] as? Bool else { return nil }
+			guard let latestDreams = json["latest_dreams"] as? [String?] else { return nil }
+			guard let latestFeelings = json["latest_feelings"] as? [Double] else { return nil }
+			guard let lovesJSONArray = json["loves"] as? [[String: Any]] else { return nil }
+			let loves = lovesJSONArray.map({ Love($0) }).flatMap({ $0 })
+			guard let motto = json["motto"] as? String else { return nil }
+			guard let skills = json["skills"] as? [String] else { return nil }
+			guard let twitterString = json["twitter"] as? String else { return nil }
+			guard let twitter = URL(string: twitterString) else { return nil }
+			self.birthday = birthday
+			self.favoriteWebsites = favoriteWebsites
+			self.gender = gender
+			self.isDogLover = isDogLover
+			self.latestDreams = latestDreams
+			self.latestFeelings = latestFeelings
+			self.loves = loves
+			self.motto = motto
+			self.skills = skills
+			self.twitter = twitter
+		}
+	}
+	var detail: Detail
+	class Experience {
+		var age: Double
+		var name: String
+		init?(_ json: [String: Any]) {
+			guard let age = json["age"] as? Double else { return nil }
+			guard let name = json["name"] as? String else { return nil }
+			self.age = age
+			self.name = name
+		}
+	}
+	var experiences: [Experience]
+	var name: String
+	class Project {
+		var bytes: [Int]
+		var createdAt: Date?
+		class More {
+			var code: String
+			var comments: [String]
+			var design: String
+			init?(_ json: [String: Any]) {
+				guard let code = json["code"] as? String else { return nil }
+				guard let comments = json["comments"] as? [String] else { return nil }
+				guard let design = json["design"] as? String else { return nil }
+				self.code = code
+				self.comments = comments
+				self.design = design
+			}
+		}
+		var more: More?
+		var name: String?
+		var url: URL?
+		init?(_ json: [String: Any]) {
+			guard let bytes = json["bytes"] as? [Int] else { return nil }
+			let createdAtString = json["created_at"] as? String
+			let createdAt = createdAtString.flatMap({ iso8601DateFormatter.date(from: $0) })
+			let moreJSONDictionary = json["more"] as? [String: Any]
+			let more = moreJSONDictionary.flatMap({ More($0) })
+			let name = json["name"] as? String
+			let urlString = json["url"] as? String
+			let url = urlString.flatMap({ URL(string: $0) })
+			self.bytes = bytes
+			self.createdAt = createdAt
+			self.more = more
+			self.name = name
+			self.url = url
+		}
+	}
+	var projects: [Project?]
+	init?(_ json: [String: Any]) {
+		guard let detailJSONDictionary = json["detail"] as? [String: Any] else { return nil }
+		guard let detail = Detail(detailJSONDictionary) else { return nil }
+		guard let experiencesJSONArray = json["experiences"] as? [[String: Any]] else { return nil }
+		let experiences = experiencesJSONArray.map({ Experience($0) }).flatMap({ $0 })
+		guard let name = json["name"] as? String else { return nil }
+		guard let projectsJSONArray = json["projects"] as? [[String: Any]?] else { return nil }
+		let projects = projectsJSONArray.map({ $0.flatMap({ Project($0) }) })
+		self.detail = detail
+		self.experiences = experiences
+		self.name = name
+		self.projects = projects
+	}
+}
+
+```
+
+Also `--argument-label`, `--parameter-name` and `--json-dictionary-name` options are available for class.
 
 If you need more information for debug, append a `--debug` option in all the commands.
 

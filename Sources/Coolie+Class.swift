@@ -136,6 +136,7 @@ extension Coolie.Value {
                 if let value = value {
                     value.generateClassProperty(with: key, optional: true, trueArgumentLabel: trueArgumentLabel, level: level, into: &string)
                 } else {
+                    indent(with: level, into: &string)
                     let type = "UnknownType"
                     string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
                 }
