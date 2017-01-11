@@ -33,6 +33,7 @@ final public class Coolie {
         case .`class`:
             value.generateClass(modelName: name, into: &string)
         }
+        string = String(string.characters.dropLast())
         return string
     }
 

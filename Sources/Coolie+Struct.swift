@@ -14,8 +14,6 @@ extension Coolie.Value {
         switch self {
         case .bool, .number, .string, .url, .date, .null:
             break
-        //case .null(let value):
-
         case .dictionary(let info):
             // struct name
             indent(with: level, into: &string)
@@ -215,6 +213,7 @@ extension Coolie.Value {
             indent(with: level, into: &string)
             if let constructorName = Config.constructorName {
                 string += "guard let \(key.coolie_lowerCamelCase) = \(key.capitalized).\(constructorName)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
+                string += Config.debug ? "print(\"Failed to generate: \(key.coolie_lowerCamelCase)\"); return nil }\n" : "return nil }\n"
             } else {
                 if Config.throwsEnabled {
                     string += "guard let \(key.coolie_lowerCamelCase) = try? \(key.capitalized)(\(trueArgumentLabel)\(key.coolie_lowerCamelCase)JSONDictionary) else { "
