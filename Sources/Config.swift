@@ -15,6 +15,7 @@ class Config {
     static var parameterName: String = "json"
     static var debug: Bool = false
     static var throwsEnabled: Bool = false
+    static var publicEnabled: Bool = false
 
     class DateFormatterName {
         static var iso8601 = "iso8601DateFormatter"
@@ -47,5 +48,13 @@ func initArgumentLabel() -> String {
         return _argumentLabel
     } else {
         return "\(_argumentLabel) \(_parameterName)"
+    }
+}
+
+func publicString() -> String {
+    if Config.publicEnabled {
+        return "public "
+    } else {
+        return ""
     }
 }

@@ -90,7 +90,7 @@ echo "\`\`\`"
 echo
 echo "Also \`--argument-label\`, \`--parameter-name\` and \`--json-dictionary-name\` options are available for class."
 echo
-echo "If you need more information for debug, append a \`--debug\` option in all the commands."
+echo "If you need **public** struct or class, append a \`--public\` option in all the commands."
 echo
 echo "## Contact"
 echo

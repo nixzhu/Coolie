@@ -67,6 +67,8 @@ func main(_ arguments: [String]) {
     Config.debug = arguments.containsOption(debugOption)
     let throwsOption = Arguments.Option.Long(key: "throws")
     Config.throwsEnabled = arguments.containsOption(throwsOption)
+    let publicOption = Arguments.Option.Long(key: "public")
+    Config.publicEnabled = arguments.containsOption(publicOption)
 
     let modelTypeOption = Arguments.Option.Long(key: "model-type")
     let modelTypeRawValue = arguments.valueOfOption(modelTypeOption)?.lowercased()

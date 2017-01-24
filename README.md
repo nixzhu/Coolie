@@ -599,7 +599,7 @@ class User {
 
 Also `--argument-label`, `--parameter-name` and `--json-dictionary-name` options are available for class.
 
-If you need more information for debug, append a `--debug` option in all the commands.
+If you need **public** struct or class, append a `--public` option in all the commands.
 
 ## Contact
 

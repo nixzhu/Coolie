@@ -17,7 +17,7 @@ extension Coolie.Value {
         case .dictionary(let info):
             // struct name
             indent(with: level, into: &string)
-            string += "struct \(modelName ?? "Model") {\n"
+            string += "\(publicString())struct \(modelName ?? "Model") {\n"
             // properties
             for key in info.keys.sorted() {
                 let value = info[key]
@@ -27,12 +27,12 @@ extension Coolie.Value {
             indent(with: level + 1, into: &string)
             let modelName = modelName ?? "Model"
             if let constructorName = Config.constructorName {
-                string += "static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                string += "\(publicString())static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
             } else {
                 if Config.throwsEnabled {
-                    string += "init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
+                    string += "\(publicString())init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
                 } else {
-                    string += "init?(\(initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
+                    string += "\(publicString())init?(\(initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
                 }
             }
             let trueArgumentLabel = Config.argumentLabel.flatMap({ "\($0): " }) ?? ""
@@ -65,9 +65,9 @@ extension Coolie.Value {
             if Config.throwsEnabled {
                 indent(with: level + 1, into: &string)
                 if let constructorName = Config.constructorName {
-                    string += "static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                    string += "\(publicString())static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
                 } else {
-                    string += "static func create(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                    string += "\(publicString())static func create(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
                 }
                 indent(with: level + 2, into: &string)
                 string += "do {\n"
@@ -122,25 +122,25 @@ extension Coolie.Value {
                     if case .null(let optionalValue) = unionValue {
                         if let _value = optionalValue {
                             if _value.isDictionary {
-                                string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
+                                string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
                             } else {
-                                string += "let \(key.coolie_lowerCamelCase): [\(_value.type)?]"
+                                string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(_value.type)?]"
                             }
                         } else {
-                            string += "let \(key.coolie_lowerCamelCase): [UnknowType?]"
+                            string += "\(publicString())let \(key.coolie_lowerCamelCase): [UnknowType?]"
                         }
                     } else {
                         if unionValue.isDictionary {
-                            string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
+                            string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                         } else {
-                            string += "let \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
+                            string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
                         }
                     }
                 } else {
-                    string += "let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
+                    string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                 }
             } else {
-                string += "let \(key.coolie_lowerCamelCase): \(key.capitalized)"
+                string += "\(publicString())let \(key.coolie_lowerCamelCase): \(key.capitalized)"
             }
             if optional {
                 string += "?\n"
@@ -153,11 +153,11 @@ extension Coolie.Value {
                     value.declareStructProperty(for: key, optional: true, level: level, into: &string)
                 } else {
                     indent(with: level, into: &string)
-                    string += "let \(key.coolie_lowerCamelCase): UnknownType?\n"
+                    string += "\(publicString())let \(key.coolie_lowerCamelCase): UnknownType?\n"
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "let \(key.coolie_lowerCamelCase): \(type)"
+                string += "\(publicString())let \(key.coolie_lowerCamelCase): \(type)"
                 if optional {
                     string += "?\n"
                 } else {

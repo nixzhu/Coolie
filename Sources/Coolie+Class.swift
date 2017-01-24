@@ -17,7 +17,7 @@ extension Coolie.Value {
         case .dictionary(let info):
             // struct name
             indent(with: level, into: &string)
-            string += "class \(modelName ?? "Model") {\n"
+            string += "\(publicString())class \(modelName ?? "Model") {\n"
             // properties
             for key in info.keys.sorted() {
                 let value = info[key]
@@ -26,9 +26,9 @@ extension Coolie.Value {
             // generate method
             indent(with: level + 1, into: &string)
             if Config.throwsEnabled {
-                string += "init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
+                string += "\(publicString())init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
             } else {
-                string += "init?(\(initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
+                string += "\(publicString())init?(\(initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
             }
             let trueArgumentLabel = Config.argumentLabel.flatMap({ "\($0): " }) ?? ""
             for key in info.keys.sorted() {
@@ -76,25 +76,25 @@ extension Coolie.Value {
                     if case .null(let optionalValue) = unionValue {
                         if let _value = optionalValue {
                             if _value.isDictionary {
-                                string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
+                                string += "\(publicString())var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
                             } else {
-                                string += "var \(key.coolie_lowerCamelCase): [\(_value.type)?]"
+                                string += "\(publicString())var \(key.coolie_lowerCamelCase): [\(_value.type)?]"
                             }
                         } else {
-                            string += "var \(key.coolie_lowerCamelCase): [UnknowType?]"
+                            string += "\(publicString())var \(key.coolie_lowerCamelCase): [UnknowType?]"
                         }
                     } else {
                         if unionValue.isDictionary {
-                            string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
+                            string += "\(publicString())var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                         } else {
-                            string += "var \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
+                            string += "\(publicString())var \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
                         }
                     }
                 } else {
-                    string += "var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
+                    string += "\(publicString())var \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                 }
             } else {
-                string += "var \(key.coolie_lowerCamelCase): \(key.capitalized)"
+                string += "\(publicString())var \(key.coolie_lowerCamelCase): \(key.capitalized)"
             }
             if optional {
                 string += "?\n"
@@ -107,11 +107,11 @@ extension Coolie.Value {
                     value.declareClassProperty(for: key, optional: true, level: level, into: &string)
                 } else {
                     indent(with: level, into: &string)
-                    string += "var \(key.coolie_lowerCamelCase): UnknownType?\n"
+                    string += "\(publicString())var \(key.coolie_lowerCamelCase): UnknownType?\n"
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "var \(key.coolie_lowerCamelCase): \(type)"
+                string += "\(publicString())var \(key.coolie_lowerCamelCase): \(type)"
                 if optional {
                     string += "?\n"
                 } else {
