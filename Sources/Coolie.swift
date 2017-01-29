@@ -58,7 +58,7 @@ final public class Coolie {
         let location: Int
 
         func description(in scanner: Scanner) -> String {
-            let string = scanner.string as NSString
+            let string = NSString(string: scanner.string)
             let subString = string.substring(to: location)
             let components = subString.components(separatedBy: "\n")
             guard !components.isEmpty else { return "[line \(1)]" }
@@ -111,55 +111,105 @@ final public class Coolie {
     private func generateTokens() -> ([Token], [TokenLocation]) {
 
         func scanBeginObject() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: "{") != nil ? .beginObject("{") : nil
+            #else
             return scanner.scanString("{", into: nil) ? .beginObject("{") : nil
+            #endif
         }
         func scanEndObject() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: "}") != nil ? .endObject("}") : nil
+            #else
             return scanner.scanString("}", into: nil) ? .endObject("}") : nil
+            #endif
         }
         func scanBeginArray() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: "[") != nil ? .beginArray("[") : nil
+            #else
             return scanner.scanString("[", into: nil) ? .beginArray("[") : nil
+            #endif
         }
         func scanEndArray() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: "]") != nil ? .endArray("]") : nil
+            #else
             return scanner.scanString("]", into: nil) ? .endArray("]") : nil
+            #endif
         }
         func scanColon() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: ":") != nil ? .colon(":") : nil
+            #else
             return scanner.scanString(":", into: nil) ? .colon(":") : nil
+            #endif
         }
         func scanComma() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: ",") != nil ? .comma(",") : nil
+            #else
             return scanner.scanString(",", into: nil) ? .comma(",") : nil
+            #endif
         }
         func scanBool() -> Token? {
+            #if os(Linux)
+            if let _ = scanner.scanString(string: "true") { return .bool(true) }
+            if let _ = scanner.scanString(string: "false") { return .bool(false) }
+            #else
             if scanner.scanString("true", into: nil) { return .bool(true) }
             if scanner.scanString("false", into: nil) { return .bool(false) }
+            #endif
             return nil
         }
         func scanNumber() -> Token? {
-            var string: NSString?
-            if scanner.scanCharacters(from: numberScanningSet, into: &string) {
-                if let string = string as? String {
-                    if let number = Int(string) {
-                        return .number(.int(number))
-                    } else if let number = Double(string) {
-                        return .number(.double(number))
-                    }
-                }
+            #if os(Linux)
+            guard let string = scanner.scanCharactersFromSet(numberScanningSet) else {
+                return nil
+            }
+            #else
+            var _string: NSString?
+            guard
+                scanner.scanCharacters(from: numberScanningSet, into: &_string),
+                let string = _string as? String else {
+                    return nil
+            }
+            #endif
+            if let number = Int(string) {
+                return .number(.int(number))
+            } else if let number = Double(string) {
+                return .number(.double(number))
             }
             return nil
         }
         func scanString() -> Token? {
-            if scanner.scanString("\"\"", into: nil) { return .string("") }
-            var string: NSString?
-            if scanner.scanString("\"", into: nil) &&
-                scanner.scanCharacters(from: stringScanningSet, into: &string) &&
-                scanner.scanString("\"", into: nil) {
-                if let string = string as? String {
-                    return .string(string)
-                }
+            #if os(Linux)
+            if let _ = scanner.scanString(string: "\"\"") { return .string("") }
+            guard
+                let _ = scanner.scanString(string: "\""),
+                let string = scanner.scanCharactersFromSet(stringScanningSet),
+                let _ = scanner.scanString(string: "\"") else {
+                    return nil
             }
-            return nil
+            #else
+            if scanner.scanString("\"\"", into: nil) { return .string("") }
+            var _string: NSString?
+            guard
+                scanner.scanString("\"", into: nil),
+                scanner.scanCharacters(from: stringScanningSet, into: &_string),
+                scanner.scanString("\"", into: nil),
+                let string = _string as? String else {
+                    return nil
+            }
+            #endif
+            return .string(string)
         }
         func scanNull() -> Token? {
+            #if os(Linux)
+            return scanner.scanString(string: "null") != nil ? .null : nil
+            #else
             return scanner.scanString("null", into: nil) ? .null : nil
+            #endif
         }
 
         var tokens = [Token]()
@@ -168,6 +218,26 @@ final public class Coolie {
             tokens.append(token)
             tokenLocations.append(TokenLocation(scanner.scanLocation))
         }
+        #if os(Linux)
+        while !scanner.atEnd {
+            let previousScanLocation = scanner.scanLocation
+            scanBeginObject().flatMap({ appendToken($0) })
+            scanEndObject().flatMap({ appendToken($0) })
+            scanBeginArray().flatMap({ appendToken($0) })
+            scanEndArray().flatMap({ appendToken($0) })
+            scanColon().flatMap({ appendToken($0) })
+            scanComma().flatMap({ appendToken($0) })
+            scanBool().flatMap({ appendToken($0) })
+            scanNumber().flatMap({ appendToken($0) })
+            scanString().flatMap({ appendToken($0) })
+            scanNull().flatMap({ appendToken($0) })
+            let currentScanLocation = scanner.scanLocation
+            guard currentScanLocation > previousScanLocation else {
+                print("Not found valid token: \(TokenLocation(currentScanLocation).description(in: scanner))")
+                return ([], [])
+            }
+        }
+        #else
         while !scanner.isAtEnd {
             let previousScanLocation = scanner.scanLocation
             scanBeginObject().flatMap({ appendToken($0) })
@@ -186,6 +256,7 @@ final public class Coolie {
                 return ([], [])
             }
         }
+        #endif
         return (tokens, tokenLocations)
     }
 
