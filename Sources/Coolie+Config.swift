@@ -1,5 +1,5 @@
 //
-//  Config.swift
+//  Coolie+Config.swift
 //  Coolie
 //
 //  Created by NIX on 16/11/14.
@@ -8,22 +8,26 @@
 
 import Foundation
 
-public class Config {
-    public static var constructorName: String?
-    public static var jsonDictionaryName: String = "[String: Any]"
-    public static var argumentLabel: String?
-    public static var parameterName: String = "json"
-    public static var debug: Bool = false
-    public static var throwsEnabled: Bool = false
-    public static var publicEnabled: Bool = false
+extension Coolie {
 
-    public class DateFormatterName {
-        public static var iso8601 = "iso8601DateFormatter"
-        public static var dateOnly = "dateOnlyDateFormatter"
+    public class Config {
+        public static var constructorName: String?
+        public static var jsonDictionaryName: String = "[String: Any]"
+        public static var argumentLabel: String?
+        public static var parameterName: String = "json"
+        public static var debug: Bool = false
+        public static var throwsEnabled: Bool = false
+        public static var publicEnabled: Bool = false
+
+        public class DateFormatterName {
+            public static var iso8601 = "iso8601DateFormatter"
+            public static var dateOnly = "dateOnlyDateFormatter"
+        }
     }
 }
 
-extension Config {
+extension Coolie.Config {
+
     static let iso8601DateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeZone = TimeZone(abbreviation: "UTC")
@@ -48,7 +52,7 @@ extension Config {
     }
 
     static func publicString() -> String {
-        if Config.publicEnabled {
+        if publicEnabled {
             return "public "
         } else {
             return ""
