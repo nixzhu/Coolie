@@ -64,7 +64,7 @@ extension Coolie.Value {
         func normal(value: Coolie.Value) {
             if value.isHyperString {
                 indent(with: level, into: &string)
-                string += "let \(key.coolie_lowerCamelCase)String = \(parameterName())[\"\(key)\"] as? String\n"
+                string += "let \(key.coolie_lowerCamelCase)String = \(Config.parameterName)[\"\(key)\"] as? String\n"
                 indent(with: level, into: &string)
                 switch value {
                 case .url:
@@ -82,7 +82,7 @@ extension Coolie.Value {
             } else {
                 indent(with: level, into: &string)
                 let type = "\(value.type)"
-                string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
+                string += "let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? \(type)\n"
             }
         }
         switch _type {
@@ -93,12 +93,12 @@ extension Coolie.Value {
                 } else {
                     indent(with: level, into: &string)
                     let type = "UnknownType"
-                    string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
+                    string += "let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? \(type)\n"
                 }
             } else {
                 if isHyperString {
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase)String = \(parameterName())[\"\(key)\"] as? String else { "
+                    string += "guard let \(key.coolie_lowerCamelCase)String = \(Config.parameterName)[\"\(key)\"] as? String else { "
                     if Config.throwsEnabled {
                         string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                     } else {
@@ -135,7 +135,7 @@ extension Coolie.Value {
                     }
                 } else {
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type) else { "
+                    string += "guard let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? \(type) else { "
                     if Config.throwsEnabled {
                         string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                     } else {
@@ -148,7 +148,7 @@ extension Coolie.Value {
         case .normalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase)Strings = \(parameterName())[\"\(key)\"] as? [String] else { "
+                string += "guard let \(key.coolie_lowerCamelCase)Strings = \(Config.parameterName)[\"\(key)\"] as? [String] else { "
                 if Config.throwsEnabled {
                     string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                 } else {
@@ -170,7 +170,7 @@ extension Coolie.Value {
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? [\(type)] else { "
+                string += "guard let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? [\(type)] else { "
                 if Config.throwsEnabled {
                     string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                 } else {
@@ -180,7 +180,7 @@ extension Coolie.Value {
         case .optionalInArray:
             if isHyperString {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase)Strings = \(parameterName())[\"\(key)\"] as? [String?] else { "
+                string += "guard let \(key.coolie_lowerCamelCase)Strings = \(Config.parameterName)[\"\(key)\"] as? [String?] else { "
                 if Config.throwsEnabled {
                     string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                 } else {
@@ -202,7 +202,7 @@ extension Coolie.Value {
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "guard let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? [\(type)?] else { "
+                string += "guard let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? [\(type)?] else { "
                 if Config.throwsEnabled {
                     string += "throw ParseError.failedToGenerate(property: \"\(key.coolie_lowerCamelCase)\") }\n"
                 } else {
@@ -268,10 +268,10 @@ extension Coolie.Value {
 extension String {
 
     var dateType: Coolie.Value.DateType? {
-        if iso8601DateFormatter.date(from: self) != nil {
+        if Config.iso8601DateFormatter.date(from: self) != nil {
             return .iso8601
         }
-        if dateOnlyDateFormatter.date(from: self) != nil {
+        if Config.dateOnlyDateFormatter.date(from: self) != nil {
             return .dateOnly
         }
         return nil

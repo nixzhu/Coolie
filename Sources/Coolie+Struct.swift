@@ -17,7 +17,7 @@ extension Coolie.Value {
         case .dictionary(let info):
             // struct name
             indent(with: level, into: &string)
-            string += "\(publicString())struct \(modelName ?? "Model") {\n"
+            string += "\(Config.publicString())struct \(modelName ?? "Model") {\n"
             // properties
             for key in info.keys.sorted() {
                 let value = info[key]
@@ -27,12 +27,12 @@ extension Coolie.Value {
             indent(with: level + 1, into: &string)
             let modelName = modelName ?? "Model"
             if let constructorName = Config.constructorName {
-                string += "\(publicString())static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                string += "\(Config.publicString())static func \(constructorName)(\(Config.initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
             } else {
                 if Config.throwsEnabled {
-                    string += "\(publicString())init(\(initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
+                    string += "\(Config.publicString())init(\(Config.initArgumentLabel()): \(Config.jsonDictionaryName)) throws {\n"
                 } else {
-                    string += "\(publicString())init?(\(initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
+                    string += "\(Config.publicString())init?(\(Config.initArgumentLabel()): \(Config.jsonDictionaryName)) {\n"
                 }
             }
             let trueArgumentLabel = Config.argumentLabel.flatMap({ "\($0): " }) ?? ""
@@ -65,9 +65,9 @@ extension Coolie.Value {
             if Config.throwsEnabled {
                 indent(with: level + 1, into: &string)
                 if let constructorName = Config.constructorName {
-                    string += "\(publicString())static func \(constructorName)(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                    string += "\(Config.publicString())static func \(constructorName)(\(Config.initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
                 } else {
-                    string += "\(publicString())static func create(\(initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
+                    string += "\(Config.publicString())static func create(\(Config.initArgumentLabel()): \(Config.jsonDictionaryName)) -> \(modelName)? {\n"
                 }
                 indent(with: level + 2, into: &string)
                 string += "do {\n"
@@ -122,25 +122,25 @@ extension Coolie.Value {
                     if case .null(let optionalValue) = unionValue {
                         if let _value = optionalValue {
                             if _value.isDictionary {
-                                string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
+                                string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)?]"
                             } else {
-                                string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(_value.type)?]"
+                                string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): [\(_value.type)?]"
                             }
                         } else {
-                            string += "\(publicString())let \(key.coolie_lowerCamelCase): [UnknowType?]"
+                            string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): [UnknowType?]"
                         }
                     } else {
                         if unionValue.isDictionary {
-                            string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
+                            string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                         } else {
-                            string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
+                            string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): [\(unionValue.type)]"
                         }
                     }
                 } else {
-                    string += "\(publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
+                    string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): [\(key.capitalized.coolie_dropLastCharacter)]"
                 }
             } else {
-                string += "\(publicString())let \(key.coolie_lowerCamelCase): \(key.capitalized)"
+                string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): \(key.capitalized)"
             }
             if optional {
                 string += "?\n"
@@ -153,11 +153,11 @@ extension Coolie.Value {
                     value.declareStructProperty(for: key, optional: true, level: level, into: &string)
                 } else {
                     indent(with: level, into: &string)
-                    string += "\(publicString())let \(key.coolie_lowerCamelCase): UnknownType?\n"
+                    string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): UnknownType?\n"
                 }
             } else {
                 indent(with: level, into: &string)
-                string += "\(publicString())let \(key.coolie_lowerCamelCase): \(type)"
+                string += "\(Config.publicString())let \(key.coolie_lowerCamelCase): \(type)"
                 if optional {
                     string += "?\n"
                 } else {
@@ -184,7 +184,7 @@ extension Coolie.Value {
                 } else {
                     indent(with: level + 2, into: &string)
                     let type = "UnknownType"
-                    string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
+                    string += "let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? \(type)\n"
                 }
             } else {
                 generateOrdinaryProperty(of: optional ? .optional : .normal, with: key, level: level + 2, into: &string)
@@ -195,7 +195,7 @@ extension Coolie.Value {
     private func generateStructDictionaryProperty(with key: String, optional: Bool, trueArgumentLabel: String, level: Int, into string: inout String) {
         if optional {
             indent(with: level, into: &string)
-            string += "let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName)\n"
+            string += "let \(key.coolie_lowerCamelCase)JSONDictionary = \(Config.parameterName)[\"\(key)\"] as? \(Config.jsonDictionaryName)\n"
             indent(with: level, into: &string)
             if let constructorName = Config.constructorName {
                 string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONDictionary.flatMap({ \(key.capitalized).\(constructorName)(\(trueArgumentLabel)$0) })\n"
@@ -204,7 +204,7 @@ extension Coolie.Value {
             }
         } else {
             indent(with: level, into: &string)
-            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(parameterName())[\"\(key)\"] as? \(Config.jsonDictionaryName) else { "
+            string += "guard let \(key.coolie_lowerCamelCase)JSONDictionary = \(Config.parameterName)[\"\(key)\"] as? \(Config.jsonDictionaryName) else { "
             if Config.throwsEnabled {
                 string += "throw ParseError.notFound(key: \"\(key)\") }\n"
             } else {
@@ -237,7 +237,7 @@ extension Coolie.Value {
                 if let value = optionalValue {
                     if value.isDictionary {
                         indent(with: level, into: &string)
-                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(parameterName())[\"\(key)\"] as? [\(Config.jsonDictionaryName)?] else { "
+                        string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(Config.parameterName)[\"\(key)\"] as? [\(Config.jsonDictionaryName)?] else { "
                         if Config.throwsEnabled {
                             string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                         } else {
@@ -255,12 +255,12 @@ extension Coolie.Value {
                 } else {
                     indent(with: level, into: &string)
                     let type = "UnknownType"
-                    string += "let \(key.coolie_lowerCamelCase) = \(parameterName())[\"\(key)\"] as? \(type)\n"
+                    string += "let \(key.coolie_lowerCamelCase) = \(Config.parameterName)[\"\(key)\"] as? \(type)\n"
                 }
             } else {
                 if unionValue.isDictionary {
                     indent(with: level, into: &string)
-                    string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(parameterName())[\"\(key)\"] as? [\(Config.jsonDictionaryName)] else { "
+                    string += "guard let \(key.coolie_lowerCamelCase)JSONArray = \(Config.parameterName)[\"\(key)\"] as? [\(Config.jsonDictionaryName)] else { "
                     if Config.throwsEnabled {
                         string += "throw ParseError.notFound(key: \"\(key)\") }\n"
                     } else {
