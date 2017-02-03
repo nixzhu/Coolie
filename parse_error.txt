@@ -1,4 +1,0 @@
-enum ParseError: Error {
-    case notFound(key: String)
-    case failedToGenerate(property: String)
-}
