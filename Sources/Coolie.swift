@@ -218,26 +218,6 @@ final public class Coolie {
             tokens.append(token)
             tokenLocations.append(TokenLocation(scanner.scanLocation))
         }
-        #if os(Linux)
-        while !scanner.atEnd {
-            let previousScanLocation = scanner.scanLocation
-            scanBeginObject().flatMap({ appendToken($0) })
-            scanEndObject().flatMap({ appendToken($0) })
-            scanBeginArray().flatMap({ appendToken($0) })
-            scanEndArray().flatMap({ appendToken($0) })
-            scanColon().flatMap({ appendToken($0) })
-            scanComma().flatMap({ appendToken($0) })
-            scanBool().flatMap({ appendToken($0) })
-            scanNumber().flatMap({ appendToken($0) })
-            scanString().flatMap({ appendToken($0) })
-            scanNull().flatMap({ appendToken($0) })
-            let currentScanLocation = scanner.scanLocation
-            guard currentScanLocation > previousScanLocation else {
-                print("Not found valid token: \(TokenLocation(currentScanLocation).description(in: scanner))")
-                return ([], [])
-            }
-        }
-        #else
         while !scanner.isAtEnd {
             let previousScanLocation = scanner.scanLocation
             scanBeginObject().flatMap({ appendToken($0) })
@@ -256,7 +236,6 @@ final public class Coolie {
                 return ([], [])
             }
         }
-        #endif
         return (tokens, tokenLocations)
     }
 
@@ -489,6 +468,15 @@ private extension Coolie.Token {
             return true
         }
     }
+}
+
+extension Scanner {
+
+    #if os(Linux)
+    var isAtEnd: Bool {
+        return atEnd
+    }
+    #endif
 }
 
 private extension Array {
