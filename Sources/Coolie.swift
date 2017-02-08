@@ -111,70 +111,32 @@ final public class Coolie {
     private func tokenize() -> ([Token], [TokenLocation]) {
 
         func scanBeginObject() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: "{") != nil ? .beginObject("{") : nil
-            #else
-            return scanner.scanString("{", into: nil) ? .beginObject("{") : nil
-            #endif
         }
         func scanEndObject() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: "}") != nil ? .endObject("}") : nil
-            #else
-            return scanner.scanString("}", into: nil) ? .endObject("}") : nil
-            #endif
         }
         func scanBeginArray() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: "[") != nil ? .beginArray("[") : nil
-            #else
-            return scanner.scanString("[", into: nil) ? .beginArray("[") : nil
-            #endif
         }
         func scanEndArray() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: "]") != nil ? .endArray("]") : nil
-            #else
-            return scanner.scanString("]", into: nil) ? .endArray("]") : nil
-            #endif
         }
         func scanColon() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: ":") != nil ? .colon(":") : nil
-            #else
-            return scanner.scanString(":", into: nil) ? .colon(":") : nil
-            #endif
         }
         func scanComma() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: ",") != nil ? .comma(",") : nil
-            #else
-            return scanner.scanString(",", into: nil) ? .comma(",") : nil
-            #endif
         }
         func scanBool() -> Token? {
-            #if os(Linux)
             if let _ = scanner.scanString(string: "true") { return .bool(true) }
             if let _ = scanner.scanString(string: "false") { return .bool(false) }
-            #else
-            if scanner.scanString("true", into: nil) { return .bool(true) }
-            if scanner.scanString("false", into: nil) { return .bool(false) }
-            #endif
             return nil
         }
         func scanNumber() -> Token? {
-            #if os(Linux)
             guard let string = scanner.scanCharactersFromSet(numberScanningSet) else {
                 return nil
             }
-            #else
-            var _string: NSString?
-            guard
-                scanner.scanCharacters(from: numberScanningSet, into: &_string),
-                let string = _string as? String else {
-                    return nil
-            }
-            #endif
             if let number = Int(string) {
                 return .number(.int(number))
             } else if let number = Double(string) {
@@ -183,7 +145,6 @@ final public class Coolie {
             return nil
         }
         func scanString() -> Token? {
-            #if os(Linux)
             if let _ = scanner.scanString(string: "\"\"") { return .string("") }
             guard
                 let _ = scanner.scanString(string: "\""),
@@ -191,25 +152,10 @@ final public class Coolie {
                 let _ = scanner.scanString(string: "\"") else {
                     return nil
             }
-            #else
-            if scanner.scanString("\"\"", into: nil) { return .string("") }
-            var _string: NSString?
-            guard
-                scanner.scanString("\"", into: nil),
-                scanner.scanCharacters(from: stringScanningSet, into: &_string),
-                scanner.scanString("\"", into: nil),
-                let string = _string as? String else {
-                    return nil
-            }
-            #endif
             return .string(string)
         }
         func scanNull() -> Token? {
-            #if os(Linux)
             return scanner.scanString(string: "null") != nil ? .null : nil
-            #else
-            return scanner.scanString("null", into: nil) ? .null : nil
-            #endif
         }
 
         var tokens = [Token]()
@@ -475,6 +421,25 @@ extension Scanner {
     #if os(Linux)
     var isAtEnd: Bool {
         return atEnd
+    }
+    #else
+    func scanString(string: String) -> String? {
+        var _string: NSString?
+        if scanString(string, into: &_string) {
+            return _string as? String
+        } else {
+            return nil
+        }
+    }
+
+    func scanCharactersFromSet(_ set: CharacterSet) -> String? {
+        var _string: NSString?
+        if scanCharacters(from: set, into: &_string) {
+            return _string as? String
+        } else {
+            return nil
+        }
+
     }
     #endif
 }
