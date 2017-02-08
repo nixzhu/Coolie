@@ -108,7 +108,7 @@ final public class Coolie {
         return symbolSet
     }()
 
-    private func generateTokens() -> ([Token], [TokenLocation]) {
+    private func tokenize() -> ([Token], [TokenLocation]) {
 
         func scanBeginObject() -> Token? {
             #if os(Linux)
@@ -262,7 +262,7 @@ final public class Coolie {
 
     private func parse() -> Value? {
 
-        let (tokens, tokenLocations) = generateTokens()
+        let (tokens, tokenLocations) = tokenize()
         guard !tokens.isEmpty else {
             print("No tokens")
             return nil
