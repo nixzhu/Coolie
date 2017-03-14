@@ -274,7 +274,11 @@ extension Coolie.Value {
                     if let constructorName = Coolie.Config.constructorName {
                         string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).\(constructorName)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
                     } else {
-                        string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                        if Coolie.Config.throwsEnabled {
+                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter).create(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                        } else {
+                            string += "let \(key.coolie_lowerCamelCase) = \(key.coolie_lowerCamelCase)JSONArray.map({ \(key.capitalized.coolie_dropLastCharacter)(\(trueArgumentLabel)$0) }).flatMap({ $0 })\n"
+                        }
                     }
                 } else {
                     unionValue.generateOrdinaryProperty(of: .normalInArray, with: key, level: level, into: &string)
