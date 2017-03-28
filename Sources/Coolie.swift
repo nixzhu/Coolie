@@ -426,7 +426,7 @@ extension Scanner {
     func scanString(string: String) -> String? {
         var _string: NSString?
         if scanString(string, into: &_string) {
-            return _string as? String
+            return _string as String?
         } else {
             return nil
         }
@@ -435,7 +435,7 @@ extension Scanner {
     func scanCharactersFromSet(_ set: CharacterSet) -> String? {
         var _string: NSString?
         if scanCharacters(from: set, into: &_string) {
-            return _string as? String
+            return _string as String?
         } else {
             return nil
         }
