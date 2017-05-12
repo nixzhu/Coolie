@@ -11,3 +11,11 @@ Coolie parse a JSON file to generate models (& their constructors).
 ## Have a Try
 
 - [coolie-cli](https://github.com/nixzhu/coolie-cli)
+
+## Baby
+
+Coolie has a [Baby](https://github.com/nixzhu/Baby) now.
+
+## License
+
+MIT
